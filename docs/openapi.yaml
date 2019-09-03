@@ -1,0 +1,32 @@
+openapi: "3.0.1"
+info:
+  title: "Employee REST API"
+  description: "Employee REST API"
+  version: "1.0.0"
+servers:
+  - url: "localhost:8500"
+    description: "Development"
+paths:
+  "/employees":
+    get:
+      tags:
+        - Employees
+      summary: "Fetch employess based on query param"
+      operationId: "fetchEmployees"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: "query"
+          name: "keyword"
+          description: "The keyword for searching employee"
+          schema:
+            type: "string"
+        - in: "query"
+          name: "num"
+          description: "Number of items to be returned in a page. Defaults is 20. To get all employees use __num:all__"
+          schema:
+            type: "string"
+            default: 20
+      responses:
+        "200":
+          description: "Return array of employees"
