@@ -37,7 +37,55 @@ paths:
           $ref: "#/components/responses/NotModified"
         "400":
           $ref: "#components/responses/BadRequest"
-  "/collections/{employeeId}":
+    post:
+      tags:
+        - Employee
+      summary: "Create an employee"
+      operationId: "createEmployee"
+      responses:
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    put:
+      tags:
+        - Employee
+      summary: "Update an employee"
+      operationId: "updateEmployee"
+      parameters:
+        - name: "employeeId"
+          in: "path"
+          required: true
+          description: "ID of an employee to be updated"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Employee succesfully updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Employee
+      summary: "Delete an employee"
+      operationId: "deleteEmployee"
+      parameters:
+        - name: "employeeId"
+          in: "path"
+          required: true
+          description: "ID of an employee to be deleted"
+          schema:
+            type: "string"
+      responses:
+        "204":
+          description: "Employee succesfully deleted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  "/employees/{employeeId}":
     get:
       tags:
         - Employee
@@ -52,7 +100,7 @@ paths:
             type: "string"
       responses:
         "200":
-          description: "The publisher found"
+          description: "The employee is found"
           headers:
             ETag:
               schema:
@@ -113,3 +161,5 @@ components:
       description: "Bad Input Parameter"
     NotFound:
       description: "Not found"
+    Created:
+      description: "Created"
