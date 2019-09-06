@@ -1,2 +1,3 @@
 # golang-clean-code-v2
-golang clean code
+
+An employee rest api using clean code and domain driven principle
