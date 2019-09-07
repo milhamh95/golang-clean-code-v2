@@ -24,15 +24,25 @@ migrate-prepare:
 
 .PHONY: migrate-up
 	@echo: "Start migrate up"
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
+	-path=driver/mysql/migrations up
 
 .PHONY: migrate-down
 	@echo: "Start migrate down"
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
+	-path=driver/mysql/migrations down
 
 .PHONY: migrate-drop
 	@echo: "Start migrate drop"
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
+	-path=driver/mysql/migrations drop
 
 .PHONY: seed-up
 	@echo: "Start seed data"
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
+	-path=driver/mysql/seeds up
 
 .PHONY: seed-down
 	@echo: "Start unseed data"
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
+	-path=driver/mysql/seeds down
