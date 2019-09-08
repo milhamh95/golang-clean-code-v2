@@ -14,7 +14,13 @@ lint-prepare:
 .PHONY: lint
 lint: vendor
 	@echo "Start linting"
-	GO111MODULE=on golangci-lint-run ./...
+	@GO111MODULE=on golangci-lint run \
+		--exclude-use-default=false \
+		--enable=golint \
+		--enable=gocyclo \
+		--enable=goconst \
+		--enable=unconvert \
+		./...
 
 # Database Migration
 .PHONY: migrate-prepare
