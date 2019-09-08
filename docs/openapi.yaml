@@ -21,6 +21,17 @@ paths:
         - $ref: "#/components/parameters/paginationNum"
         - $ref: "#/components/parameters/paginationCursor"
         - $ref: "#/components/parameters/IfNoneMatch"
+        - in: "query"
+          name: "deptIds"
+          description: "Comma-separated identifier of department ids"
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["1", "2"]
+          style: "form"
+          explode: false
+          required: false
       responses:
         "200":
           description: "Return all employees based on the filter"
@@ -110,7 +121,107 @@ paths:
           $ref: "#/components/responses/NotModified"
         "404":
           description: "#/components/responses/NotFound"
-
+  "/departments/":
+    get:
+      tags:
+        - Department
+      summary: "Fetch department by given params"
+      operationId: "fetchDepartmenta"
+      parameters:
+        - $ref: "#/components/parameters/filterIDs"
+        - $ref: "#/components/parameters/filterKeyword"
+        - $ref: "#/components/parameters/paginationNum"
+        - $ref: "#/components/parameters/paginationCursor"
+        - $ref: "#/components/parameters/IfNoneMatch"
+      responses:
+        "200":
+          description: "Return all departments based on the filter"
+          headers:
+            X-Cursor:
+              description: "Cursor used for pagination"
+              schema:
+                type: "string"
+            ETag:
+              description: "Entity-Tag used for caching"
+              schema:
+                type: "string"
+        "304":
+          $ref: "#/components/responses/NotModified"
+        "400":
+          $ref: "#components/responses/BadRequest"
+    post:
+      tags:
+        - Department
+      summary: "Create a department"
+      operationId: "createDepartment"
+      responses:
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    put:
+      tags:
+        - Department
+      summary: "Update a department"
+      operationId: "updateDepartment"
+      parameters:
+        - name: "departmentId"
+          in: "path"
+          required: true
+          description: "ID of a department to be updated"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Department succesfully updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Department
+      summary: "Delete n department"
+      operationId: "deleteDepartment"
+      parameters:
+        - name: "departmentId"
+          in: "path"
+          required: true
+          description: "ID of an employee to be deleted"
+          schema:
+            type: "string"
+      responses:
+        "204":
+          description: "Department succesfully deleted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  "/departments/{departmentId}":
+    get:
+      tags:
+        - Department
+      summary: "Get a department by id"
+      operationId: "getDepartment"
+      parameters:
+        - name: "departmentId"
+          in: "path"
+          required: true
+          description: "ID of a department want to get"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "The department is found"
+          headers:
+            ETag:
+              schema:
+                type: "string"
+              description: "Entity-tag used for caching"
+        "304":
+          $ref: "#/components/responses/NotModified"
+        "404":
+          description: "#/components/responses/NotFound"
 components:
   parameters:
     paginationCursor:
