@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS 'employees';
+DROP INDEX `deptId_idx` ON `employees`;
