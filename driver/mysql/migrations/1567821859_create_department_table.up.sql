@@ -1,11 +1,9 @@
-CREATE TABLE IF NOT EXISTS 'employees' (
-    'id' int(11) unsigned NOT NULL AUTO_INCREMENT,
-    `first_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-    `last_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-    `birth_place` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-    'date_of_birth' DATE NOT NULL,
-    'title' varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-    'dept_id' varchar(50) NOT NULL,
+CREATE TABLE IF NOT EXISTS `departments` (
+    `id` varchar (50) NOT NULL,
+    `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+    `description` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+    `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    FULLTEXT KEY `first_name_idx` (`first_name`)
+    FULLTEXT KEY `name_idx` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
