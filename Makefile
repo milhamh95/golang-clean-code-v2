@@ -6,6 +6,28 @@ MDB_PASSWORD ?=
 MDB_ADDRESS ?= 127.0.0.1:3306
 MDB_DATABASE ?= employee
 
+# Dependency Management
+.PHONY: vendor
+vendor: go.mod go.sum
+	@GO111MODULE=on go get ./...
+
+# Linter
+.PHONY: lint-prepare
+lint-prepare:
+	@echo "Installing golangci-lint"
+	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+
+.PHONY: lint
+lint: vendor
+	@echo "Start linting"
+	@GO111MODULE=on golangci-lint-run ./..
+
+# Mockery Prepare
+.PHONY: mockery-prepare
+mockery-prepare:
+	@echo "Installing mockery"
+	@GO111MODULE=off go get -u github.com/vektra/mockery/.../
+
 # Database Migration
 .PHONY: migrate-prepare
 migrate-prepare:
