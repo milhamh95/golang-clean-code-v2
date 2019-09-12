@@ -1,15 +1,9 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/labstack/echo/v4"
+	"github.com/milhamhidayat/golang-clean-code-v2/cmd"
 )
 
 func main() {
-	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "hello")
-	})
-	e.Logger.Fatal(e.Start(":1323"))
+	cmd.Execute()
 }
