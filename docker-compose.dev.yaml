@@ -1,0 +1,8 @@
+version: "3.0"
+services:
+  web:
+    volumes:
+      - ./:/app
+    build:
+      context: .
+      dockerfile: Dockerfile.dev

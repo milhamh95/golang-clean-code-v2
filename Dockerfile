@@ -1,34 +1,36 @@
-# ## Builder
-# FROM golang:1.13.0-alpine3.10 as builder
+# Dockerfile References: https://docs.docker.com/engine/reference/builder/
 
-# # Install package
-# RUN apk update && apk upgrade \
-#     && apk --update --no-cache add git make \
-#     && rm -f /var/cache/apk/*
+# Start from the latest golang base image
+FROM golang:1.12-alpine3.9 as builder
 
-# WORKDIR /app
-
-# COPY go.mod go.sum ./
-# RUN go mod download
-
-# COPY . .
-
-# RUN ["go", "get", "github.com/githubnemo/CompileDaemon"]
-
-# ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o employee" -command="./employee http"
-
-FROM golang:1.12-alpine
-RUN apk add --update --no-cache git
-
-ENV GO111MODULE=on
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-COPY go.mod .
-COPY go.sum .
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
+# Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
-RUN ["go", "get", "github.com/githubnemo/CompileDaemon"]
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o employee" -command="./employee http"
+
+######## Start a new stage from scratch #######
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /employee
+
+# Copy the Pre-built binary file from the previous stage
+COPY --from=builder /app/employee .
+
+# Expose port 8080 to the outside world
+EXPOSE 8500
+
+# Command to run the executable
+CMD ./employee http

@@ -1,8 +1,8 @@
 SOURCES := $(shell find . -name '*.go' -type f -not -path './vendor/*'  -not -path '*/mocks/*')
 
 # Database
-MDB_USER ?= 
-MDB_PASSWORD ?= 
+MDB_USER ?=
+MDB_PASSWORD ?=
 MDB_ADDRESS ?= 127.0.0.1:3306
 MDB_DATABASE ?= employee
 
@@ -63,3 +63,28 @@ seed-down:
 	@echo "Start unseed data"
 	@migrate -database "mysql://$(MDB_USER):$(MDB_PASSWORD)@tcp($(MDB_ADDRESS))/$(MDB_DATABASE)" \
 	-path=driver/mariadb/seeds down
+
+# Build and Installation
+.PHONY: docker-dev
+docker-dev:
+	@echo "build employee DEV image"
+	@docker build -t employee . -f Dockerfile.dev
+
+.PHONY: docker
+docker:
+	@echo "build employee PROD image"
+	@docker build -t employee .
+
+.PHONY: run-dev
+run-dev:
+	@echo "run employee DEV"
+	@docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up -d
+
+.PHONY: run
+run:
+	@echo "run employee PROD"
+	@docker-compose up -d
+
+.PHONY: stop
+stop:
+	@docker-compose down

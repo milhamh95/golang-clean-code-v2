@@ -1,9 +1,7 @@
-version: "2.3"
+version: "3.0"
 services:
   web:
     image: employee
     container_name: employee_api
     ports:
       - 8500:8500
-    volumes:
-      - ./:/app

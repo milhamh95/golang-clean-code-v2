@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -18,12 +17,8 @@ var serverCmd = &cobra.Command{
 		e := echo.New()
 
 		e.GET("ping", func(c echo.Context) error {
-			return c.JSON(http.StatusOK, "time to test")
+			return c.JSON(http.StatusOK, "pong this is")
 		})
-
-		fmt.Println("++++++++ server ++++++++")
-		fmt.Println("start server sdfsdf")
-		fmt.Println("+++++++++++++++++")
 
 		log.Info("Starting HTTP server at ", address)
 		err := e.Start(address)
