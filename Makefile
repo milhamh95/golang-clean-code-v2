@@ -1,4 +1,5 @@
-SOURCES := $(shell find . -name '*.go' -type f -not -path './vendor/*'  -not -path '*/mocks/*')
+IMAGE_NAME := employee
+TEST_OPTS := -covermode=atomic $(TEST_OPTS)
 
 # Database
 MDB_USER ?=
@@ -68,12 +69,12 @@ seed-down:
 .PHONY: docker-dev
 docker-dev:
 	@echo "build employee DEV image"
-	@docker build -t employee . -f Dockerfile.dev
+	@docker build -t $(IMAGE_NAME) . -f Dockerfile.dev
 
 .PHONY: docker
 docker:
 	@echo "build employee PROD image"
-	@docker build -t employee .
+	@docker build -t $(IMAGE_NAME) .
 
 .PHONY: run-dev
 run-dev:
@@ -88,3 +89,12 @@ run:
 .PHONY: stop
 stop:
 	@docker-compose down
+
+# Testing
+.PHONY: unittest
+unittest: vendor
+	GO111MODULE=on go test -short $(TEST_OPTS) ./..
+
+.PHONY: test
+test: vendor
+	GO111MODULE=on go test $(TEST_OPTS) ./...
