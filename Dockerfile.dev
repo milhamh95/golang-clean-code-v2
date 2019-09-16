@@ -1,5 +1,5 @@
 FROM golang:1.12-alpine
-RUN apk add --update --no-cache git
+RUN apk add --update --no-cache git make
 
 ENV GO111MODULE=on
 WORKDIR /app

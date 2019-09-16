@@ -2,10 +2,10 @@ IMAGE_NAME := employee
 TEST_OPTS := -covermode=atomic $(TEST_OPTS)
 
 # Database
-MDB_USER ?=
-MDB_PASSWORD ?=
-MDB_ADDRESS ?= 127.0.0.1:3306
-MDB_DATABASE ?= employee
+MYSQL_USER ?= employee
+MYSQL_PASSWORD ?= employee-pass
+MYSQL_ADDRESS ?= 127.0.0.1:3306
+MYSQL_DATABASE ?= employee
 
 # Dependency Management
 .PHONY: vendor
@@ -38,34 +38,44 @@ migrate-prepare:
 .PHONY: migrate-up
 migrate-up:
 	@echo "Start migrate up"
-	@migrate -database "mysql://$(MDB_USER):$(MDB_PASSWORD)@tcp($(MDB_ADDRESS))/$(MDB_DATABASE)" \
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
 	-path=driver/mariadb/migrations up
 
 .PHONY: migrate-down
 migrate-down:
 	@echo "Start migrate down"
-	@migrate -database "mysql://$(MDB_USER):$(MDB_PASSWORD)@tcp($(MDB_ADDRESS))/$(MDB_DATABASE)" \
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
 	-path=driver/mariadb/migrations down
 
 .PHONY: migrate-drop
 migrate-drop:
 	@echo "Start migrate drop"
-	@migrate -database "mysql://$(MDB_USER):$(MDB_PASSWORD)@tcp($(MDB_ADDRESS))/$(MDB_DATABASE)" \
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
 	-path=driver/mariadb/migrations drop
 
 .PHONY: seed-up
 seed-up:
 	@echo "Start seed data"
-	@migrate -database "mysql://$(MDB_USER):$(MDB_PASSWORD)@tcp($(MDB_ADDRESS))/$(MDB_DATABASE)" \
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
 	-path=driver/mariadb/seeds up
 
 .PHONY: seed-down
 seed-down:
 	@echo "Start unseed data"
-	@migrate -database "mysql://$(MDB_USER):$(MDB_PASSWORD)@tcp($(MDB_ADDRESS))/$(MDB_DATABASE)" \
+	@migrate -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_ADDRESS))/$(MYSQL_DATABASE)" \
 	-path=driver/mariadb/seeds down
 
-# Build and Installation
+# Docker
+.PHONY: mariadb-up
+mariadb-up:
+	@echo "start mariadb"
+	@docker-compose up -d mariadb
+
+.PHONY: mariadb-down
+mariadb-down:
+	@echo "stop mariadb"
+	@docker stop employee_mariadb
+
 .PHONY: docker-dev
 docker-dev:
 	@echo "build employee DEV image"
@@ -98,3 +108,12 @@ unittest: vendor
 .PHONY: test
 test: vendor
 	GO111MODULE=on go test $(TEST_OPTS) ./...
+
+# Mockery
+DepartmentUseCase:
+	@mockery -dir=domain -name=DepartmentUseCase -output=domain/mocks
+
+DepartmentRepository:
+	@mockery -dir=domain -name=DepartmentRepository -output=domain/mocks
+
+
