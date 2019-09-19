@@ -19,13 +19,13 @@ type Department struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	CreatedTime time.Time `json:"created_time"`
-	UpdatedTime time.Time `json:"updated_time"`
+	CreatedTime time.Time `json:"-"`
+	UpdatedTime time.Time `json:"-"`
 }
 
 // DepartmentUseCase represent use case contract for department
 type DepartmentUseCase interface {
-	Create(ctx context.Context, d Department) (department Department, err error)
+	Create(ctx context.Context, d *Department) (err error)
 	Fetch(ctx context.Context, filter DepartmentFilter) (departments []Department, nextCursor string, err error)
 	Get(ctx context.Context, departmentID string) (department Department, err error)
 	Update(ctx context.Context, d Department) (department Department, err error)
@@ -34,7 +34,7 @@ type DepartmentUseCase interface {
 
 // DepartmentRepository represent repository contract for department
 type DepartmentRepository interface {
-	Create(ctx context.Context, d Department) (department Department, err error)
+	Create(ctx context.Context, d *Department) (err error)
 	Fetch(ctx context.Context, filter DepartmentFilter) (departments []Department, nextCursor string, err error)
 	Get(ctx context.Context, departmentID string) (department Department, err error)
 	Update(ctx context.Context, d Department) (department Department, err error)

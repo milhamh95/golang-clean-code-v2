@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 // basepath is the root directory of this package
@@ -48,7 +46,7 @@ func GetGolden(t *testing.T, filename string) []byte {
 func UnmarshallGoldenToJSON(t *testing.T, filename string, input interface{}) {
 	err := json.Unmarshal(GetGolden(t, filename), &input)
 	if err != nil {
-		require.NoError(t, err)
+		t.Fatal(err)
 	}
 }
 

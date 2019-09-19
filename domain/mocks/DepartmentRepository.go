@@ -15,24 +15,17 @@ type DepartmentRepository struct {
 }
 
 // Create provides a mock function with given fields: ctx, d
-func (_m *DepartmentRepository) Create(ctx context.Context, d domain.Department) (domain.Department, error) {
+func (_m *DepartmentRepository) Create(ctx context.Context, d *domain.Department) error {
 	ret := _m.Called(ctx, d)
 
-	var r0 domain.Department
-	if rf, ok := ret.Get(0).(func(context.Context, domain.Department) domain.Department); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Department) error); ok {
 		r0 = rf(ctx, d)
 	} else {
-		r0 = ret.Get(0).(domain.Department)
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, domain.Department) error); ok {
-		r1 = rf(ctx, d)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // Delete provides a mock function with given fields: ctx, departmentID
