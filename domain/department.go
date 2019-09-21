@@ -19,8 +19,8 @@ type Department struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	CreatedTime time.Time `json:"-"`
-	UpdatedTime time.Time `json:"-"`
+	CreatedTime time.Time `json:"created_time"`
+	UpdatedTime time.Time `json:"updated_time"`
 }
 
 // DepartmentUseCase represent use case contract for department

@@ -26,23 +26,17 @@ func NewDepartmentRepository(db *sql.DB) DepartmentRepository {
 }
 
 // Create is a repository to insert an article
-func (r DepartmentRepository) Create(ctx context.Context, d employee.Department) (err error) {
+func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department) (err error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "error starting transaction")
 		return
 	}
 
-	fmt.Println("++++++++ d ++++++++")
-	fmt.Printf("%+v\n", d)
-	fmt.Println("+++++++++++++++++")
-
 	collectionID := uuid.New().String()
 	if d.ID == "" {
+		fmt.Println("called")
 		d.ID = collectionID
-		fmt.Println("-------- id changes -------")
-		fmt.Printf("%+v\n", d.ID)
-		fmt.Println("-----------------")
 	}
 
 	query, args, err := sq.Insert("departments").
@@ -67,15 +61,11 @@ func (r DepartmentRepository) Create(ctx context.Context, d employee.Department)
 		}
 	}()
 
-	dept, err := r.DB.ExecContext(ctx, query, args...)
+	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		err = errors.Wrap(err, "error when inserting department")
 		return
 	}
-
-	fmt.Println("--------  -------")
-	fmt.Printf("%+v\n", dept)
-	fmt.Println("-----------------")
 
 	return nil
 }
@@ -87,11 +77,7 @@ func (r DepartmentRepository) Fetch(ctx context.Context, filter employee.Departm
 
 // Get is a repository to get an article based on parameter
 func (r DepartmentRepository) Get(ctx context.Context, departmentID string) (department employee.Department, err error) {
-	fmt.Println("======== dept id ========")
-	fmt.Printf("%+v\n", departmentID)
-	fmt.Println("=================")
-
-	query, args, err := sq.Select("id", "name", "description").
+	query, args, err := sq.Select("id", "name", "description", "created_time", "updated_time").
 		From("departments").
 		Where(sq.Eq{"id": departmentID}).
 		ToSql()
@@ -105,6 +91,8 @@ func (r DepartmentRepository) Get(ctx context.Context, departmentID string) (dep
 		&department.ID,
 		&department.Name,
 		&department.Description,
+		&department.CreatedTime,
+		&department.UpdatedTime,
 	)
 
 	if err != nil {

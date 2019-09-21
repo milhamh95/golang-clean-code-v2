@@ -2,7 +2,6 @@ package mariadb
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -52,21 +51,10 @@ func MigrateDB(db *sql.DB) (m *migrate.Migrate, err error) {
 		return nil, errors.New("fail to run caller")
 	}
 
-	fmt.Println("++++++++ filename ++++++++")
-	fmt.Printf("%+v\n", filename)
-	fmt.Println("+++++++++++++++++")
-
 	migrationPath := path.Join(path.Dir(filename), "migrations")
-
-	fmt.Println("++++++++ migrations ++++++++")
-	fmt.Printf("%+v\n", migrationPath)
-	fmt.Println("+++++++++++++++++")
 
 	m, err = migrate.NewWithDatabaseInstance("file://"+migrationPath, "mysql", driver)
 	if err != nil {
-		fmt.Println("++++++++ err migration++++++++")
-		fmt.Printf("%+v\n", err)
-		fmt.Println("+++++++++++++++++")
 		return nil, err
 	}
 
@@ -76,6 +64,6 @@ func MigrateDB(db *sql.DB) (m *migrate.Migrate, err error) {
 
 // TearDownSuite is a function to tear down test setup
 func (d *DBSuite) TearDownSuite() {
-	// require.NoError(d.T(), d.mg.Drop())
+	require.NoError(d.T(), d.mg.Drop())
 	require.NoError(d.T(), d.DB.Close())
 }
