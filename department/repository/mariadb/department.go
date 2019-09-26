@@ -71,7 +71,7 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 	defer func() {
 		err = stmt.Close()
 		if err != nil {
-			log.Warn(err)
+			log.Error(err)
 		}
 	}()
 
@@ -241,7 +241,7 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 	defer func() {
 		err = stmt.Close()
 		if err != nil {
-			log.Warn(err)
+			log.Error(err)
 		}
 	}()
 

@@ -225,3 +225,18 @@ func (d *departmentSuite) TestFetch() {
 		require.NoError(t, err)
 	})
 }
+
+func (d *departmentSuite) TestDelete() {
+	departmentRepo := repo.NewDepartmentRepository(d.DB)
+
+	var department domain.Department
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department)
+
+	d.T().Run("success", func(t *testing.T) {
+		err := d.SeedDepartment([]domain.Department{department})
+		require.NoError(t, err)
+
+		err = departmentRepo.Delete(context.TODO(), department.ID)
+		require.NoError(t, err)
+	})
+}
