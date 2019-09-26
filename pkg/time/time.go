@@ -24,10 +24,12 @@ func GetUTCTime() (finalDate time.Time, err error) {
 	if err != nil {
 		return
 	}
-	finalDate, err = ConvertTimeToDifferentTimezone(date, loc)
+
+	finalDate, err = ConvertTimeWithTimeStamp(date.In(loc))
 	if err != nil {
 		return
 	}
+
 	return
 }
 
@@ -39,6 +41,7 @@ func ConvertToUTCTime(date time.Time) (finalDate time.Time, err error) {
 	}
 	finalDate, err = ConvertTimeToDifferentTimezone(date, loc)
 	if err != nil {
+
 		return
 	}
 	return

@@ -7,7 +7,7 @@ import (
 
 // DepartmentFilter represent query filter
 type DepartmentFilter struct {
-	IDs     string
+	IDs     []string
 	Keyword string
 	Num     int
 	Cursor  string

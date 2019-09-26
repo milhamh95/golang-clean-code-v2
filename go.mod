@@ -10,6 +10,7 @@ require (
 	github.com/json-iterator/go v1.1.7
 	github.com/labstack/echo/v4 v4.1.10
 	github.com/pkg/errors v0.8.1
+	github.com/segmentio/ksuid v1.0.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0

@@ -11,8 +11,8 @@ type Cursor struct {
 	LastPosition int    `json:"last_position"`
 }
 
-// EncodeCursor is a function to transform cursor object to string
-func EncodeCursor(cursor Cursor) (encodedCursor string, err error) {
+// Encode is a function to transform cursor object to string
+func Encode(cursor Cursor) (encodedCursor string, err error) {
 	cursorByte, err := json.Marshal(cursor)
 	if err != nil {
 		return
@@ -21,8 +21,8 @@ func EncodeCursor(cursor Cursor) (encodedCursor string, err error) {
 	return
 }
 
-// DecodeCursor is a function to transform string to cursor object
-func DecodeCursor(encodedCursor string) (decodedcursor Cursor, err error) {
+// Decode is a function to transform string to cursor object
+func Decode(encodedCursor string) (decodedcursor Cursor, err error) {
 	cursorByte, err := base64.StdEncoding.DecodeString(encodedCursor)
 	if err != nil {
 		return
@@ -33,5 +33,21 @@ func DecodeCursor(encodedCursor string) (decodedcursor Cursor, err error) {
 		return
 	}
 
+	return
+}
+
+// EncodeBase64 encode string to base64 form
+func EncodeBase64(value string) string {
+	return base64.StdEncoding.EncodeToString([]byte(value))
+}
+
+// DecodeBase64 decode base64 value to string
+func DecodeBase64(value string) (res string, err error) {
+	cursorByte, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return
+	}
+
+	res = string(cursorByte)
 	return
 }

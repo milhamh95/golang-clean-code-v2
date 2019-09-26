@@ -56,7 +56,7 @@ func (d *departmentSuite) TestCreate() {
 
 	d.T().Run("success", func(t *testing.T) {
 		var department domain.Department
-		testdata.UnmarshallGoldenToJSON(t, "department-da7885d4-8504-47c7-9383-286a97faa14a", &department)
+		testdata.UnmarshallGoldenToJSON(t, "department-0ujssxh0cECutqzMgbtXSGnjorm", &department)
 
 		date, err := ntime.GetLocalTime()
 		require.NoError(t, err)
@@ -83,7 +83,7 @@ func (d *departmentSuite) TestGet() {
 
 	d.T().Run("success", func(t *testing.T) {
 		var department domain.Department
-		testdata.UnmarshallGoldenToJSON(t, "department-da7885d4-8504-47c7-9383-286a97faa14a", &department)
+		testdata.UnmarshallGoldenToJSON(t, "department-0ujssxh0cECutqzMgbtXSGnjorm", &department)
 
 		date, err := ntime.GetLocalTime()
 		require.NoError(t, err)
@@ -110,5 +110,118 @@ func (d *departmentSuite) TestGet() {
 		expectedErr := errors.New("data is not found")
 		_, err := departmentRepo.Get(context.Background(), "1")
 		require.EqualError(t, err, expectedErr.Error())
+	})
+}
+
+func (d *departmentSuite) TestFetch() {
+	departmentRepo := repo.NewDepartmentRepository(d.DB)
+
+	var department1, department2, department3, department4 domain.Department
+
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department1)
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department2)
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujsszwN8NRY24YaXiTIE2VWDTS", &department3)
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujsszgFvbiEr7CDgE3z8MAUPFt", &department4)
+
+	departments := make([]domain.Department, 4)
+	departments[0] = department1
+	departments[1] = department2
+	departments[2] = department3
+	departments[3] = department4
+
+	for i := range departments {
+		date, err := ntime.GetLocalTime()
+		require.NoError(d.T(), err)
+		departments[i].CreatedTime = date
+		departments[i].UpdatedTime = date
+	}
+
+	err := d.SeedDepartment(departments)
+	require.NoError(d.T(), err)
+
+	d.T().Run("success with ids", func(t *testing.T) {
+		want := make([]domain.Department, 3)
+		want[0] = departments[1]
+		want[1] = departments[2]
+		want[2] = departments[0]
+
+		for i, v := range want {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			want[i].CreatedTime = utcTime
+			want[i].UpdatedTime = utcTime
+		}
+
+		depts, _, err := departmentRepo.Fetch(context.Background(), domain.DepartmentFilter{
+			IDs: []string{want[0].ID, want[1].ID, want[2].ID},
+		})
+
+		require.Equal(t, want, depts)
+		require.NoError(t, err)
+	})
+
+	d.T().Run("success with keyword", func(t *testing.T) {
+		want := make([]domain.Department, 2)
+		want[0] = departments[3]
+		want[1] = departments[1]
+
+		for i, v := range want {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			want[i].CreatedTime = utcTime
+			want[i].UpdatedTime = utcTime
+		}
+
+		expectedCursor := "MHVqc3N3VGhJR1RVWW0ySzhGak9PZlh0WTFL"
+
+		depts, cur, err := departmentRepo.Fetch(context.Background(), domain.DepartmentFilter{
+			Keyword: "Marketing",
+		})
+
+		require.Equal(t, want, depts)
+		require.Equal(t, expectedCursor, cur)
+		require.NoError(t, err)
+	})
+
+	d.T().Run("success with num", func(t *testing.T) {
+		want := make([]domain.Department, 4)
+		want[0] = departments[2]
+		want[1] = departments[3]
+		want[2] = departments[0]
+		want[3] = departments[1]
+
+		for i, v := range want {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			want[i].CreatedTime = utcTime
+			want[i].UpdatedTime = utcTime
+		}
+
+		expectedCursor := "MHVqc3N3VGhJR1RVWW0ySzhGak9PZlh0WTFL"
+
+		depts, cur, err := departmentRepo.Fetch(context.Background(), domain.DepartmentFilter{
+			Num: 4,
+		})
+
+		require.Equal(t, want, depts)
+		require.Equal(t, expectedCursor, cur)
+		require.NoError(t, err)
+	})
+
+	d.T().Run("success with num and cursor", func(t *testing.T) {
+		var want []domain.Department
+
+		expectedCursor := "MHVqc3N3VGhJR1RVWW0ySzhGak9PZlh0WTFL"
+		depts, cur, err := departmentRepo.Fetch(context.Background(), domain.DepartmentFilter{
+			Num:    4,
+			Cursor: "MHVqc3N3VGhJR1RVWW0ySzhGak9PZlh0WTFL",
+		})
+
+		require.Equal(t, want, depts)
+		require.Equal(t, expectedCursor, cur)
+		require.NoError(t, err)
 	})
 }
