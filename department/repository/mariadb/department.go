@@ -47,10 +47,7 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 		ToSql()
 	if err != nil {
 		defer func() {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("%s", err.Error())
-			}
+			rollback(tx)
 		}()
 		err = errors.Wrap(err, "error generating query")
 		return
@@ -59,10 +56,7 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		defer func() {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("%s", err.Error())
-			}
+			rollback(tx)
 		}()
 		err = errors.Wrap(err, "error prepare context")
 		return
@@ -78,10 +72,7 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
 		defer func() {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("%s", err.Error())
-			}
+			rollback(tx)
 		}()
 		err = errors.Wrap(err, "error when inserting department")
 		return
@@ -219,10 +210,7 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 		ToSql()
 	if err != nil {
 		defer func() {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("failed to rollback the transaction : %s", err.Error())
-			}
+			rollback(tx)
 		}()
 		return
 	}
@@ -230,10 +218,7 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		defer func() {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("failed to rollback the transaction : %s", err.Error())
-			}
+			rollback(tx)
 		}()
 		return
 	}
@@ -248,10 +233,7 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
 		defer func() {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("failed to rollback the transaction : %s", err.Error())
-			}
+			rollback(tx)
 		}()
 	}
 
@@ -261,4 +243,11 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 	}
 
 	return
+}
+
+func rollback(tx *sql.Tx) {
+	err := tx.Rollback()
+	if err != nil && err != sql.ErrTxDone {
+		log.Error(err)
+	}
 }
