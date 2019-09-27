@@ -14,6 +14,7 @@ import (
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 	employee "github.com/milhamhidayat/golang-clean-code-v2/domain"
 	"github.com/milhamhidayat/golang-clean-code-v2/pkg/cursor"
+	ntime "github.com/milhamhidayat/golang-clean-code-v2/pkg/time"
 )
 
 // DepartmentRepository implement all method from interface
@@ -46,18 +47,14 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 		Values(d.ID, d.Name, d.Description).
 		ToSql()
 	if err != nil {
-		defer func() {
-			rollback(tx)
-		}()
+		rollback(tx)
 		err = errors.Wrap(err, "error generating query")
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		defer func() {
-			rollback(tx)
-		}()
+		rollback(tx)
 		err = errors.Wrap(err, "error prepare context")
 		return
 	}
@@ -71,18 +68,12 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
-		defer func() {
-			rollback(tx)
-		}()
+		rollback(tx)
 		err = errors.Wrap(err, "error when inserting department")
 		return
 	}
 
 	err = tx.Commit()
-	if err != nil {
-		return
-	}
-
 	return nil
 }
 
@@ -129,6 +120,13 @@ func (r DepartmentRepository) Fetch(ctx context.Context, filter employee.Departm
 		return
 	}
 
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
 	for rows.Next() {
 		d := domain.Department{}
 
@@ -153,7 +151,6 @@ func (r DepartmentRepository) Fetch(ctx context.Context, filter employee.Departm
 
 	nextCursor = filter.Cursor
 	if len(departments) >= 1 {
-		fmt.Println("called")
 		id := departments[len(departments)-1].ID
 		nextCursor = cursor.EncodeBase64(id)
 	}
@@ -195,7 +192,57 @@ func (r DepartmentRepository) Get(ctx context.Context, departmentID string) (dep
 
 // Update is a repository to update an article
 func (r DepartmentRepository) Update(ctx context.Context, d employee.Department) (department employee.Department, err error) {
-	return employee.Department{}, nil
+	localTime, err := ntime.GetLocalTime()
+	if err != nil {
+		return
+	}
+
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return
+	}
+
+	query, args, err := sq.Update("departments").
+		SetMap(sq.Eq{
+			"name":         d.Name,
+			"description":  d.Description,
+			"updated_time": localTime,
+		}).
+		Where(sq.Eq{"id": d.ID}).
+		ToSql()
+	if err != nil {
+		rollback(tx)
+		return
+	}
+
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		rollback(tx)
+		return
+	}
+
+	defer func() {
+		err = stmt.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
+	_, err = stmt.ExecContext(ctx, args...)
+	if err != nil {
+		rollback(tx)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return
+	}
+
+	department, err = r.Get(ctx, d.ID)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // Delete is a repository to delete an article
@@ -209,17 +256,13 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 		Where(sq.Eq{"id": departmentID}).
 		ToSql()
 	if err != nil {
-		defer func() {
-			rollback(tx)
-		}()
+		rollback(tx)
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		defer func() {
-			rollback(tx)
-		}()
+		rollback(tx)
 		return
 	}
 
@@ -232,16 +275,11 @@ func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (
 
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
-		defer func() {
-			rollback(tx)
-		}()
-	}
-
-	err = tx.Commit()
-	if err != nil {
+		rollback(tx)
 		return
 	}
 
+	err = tx.Commit()
 	return
 }
 

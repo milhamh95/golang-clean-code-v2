@@ -226,17 +226,39 @@ func (d *departmentSuite) TestFetch() {
 	})
 }
 
-func (d *departmentSuite) TestDelete() {
+func (d *departmentSuite) TestUpdate() {
 	departmentRepo := repo.NewDepartmentRepository(d.DB)
 
 	var department domain.Department
 	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department)
 
+	err := d.SeedDepartment([]domain.Department{department})
+	require.NoError(d.T(), err)
+
 	d.T().Run("success", func(t *testing.T) {
-		err := d.SeedDepartment([]domain.Department{department})
+		newDepartment := domain.Department{
+			ID:          department.ID,
+			Name:        department.Name,
+			Description: "this is description",
+		}
+		res, err := departmentRepo.Update(context.Background(), newDepartment)
+		require.NoError(t, err)
+		require.Equal(t, newDepartment.Description, res.Description)
+	})
+}
+
+func (d *departmentSuite) TestDelete() {
+	departmentRepo := repo.NewDepartmentRepository(d.DB)
+
+	var department1, department2 domain.Department
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department1)
+	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department2)
+
+	d.T().Run("success", func(t *testing.T) {
+		err := d.SeedDepartment([]domain.Department{department1})
 		require.NoError(t, err)
 
-		err = departmentRepo.Delete(context.TODO(), department.ID)
+		err = departmentRepo.Delete(context.TODO(), department1.ID)
 		require.NoError(t, err)
 	})
 }
