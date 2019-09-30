@@ -4,16 +4,16 @@ import (
 	"context"
 	"testing"
 
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"golang.org/x/sync/errgroup"
+
 	repo "github.com/milhamhidayat/golang-clean-code-v2/department/repository/mariadb"
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 	mariadb "github.com/milhamhidayat/golang-clean-code-v2/driver/mariadb"
 	ntime "github.com/milhamhidayat/golang-clean-code-v2/pkg/time"
 	"github.com/milhamhidayat/golang-clean-code-v2/testdata"
-	"github.com/pkg/errors"
-
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"golang.org/x/sync/errgroup"
 )
 
 type departmentSuite struct {
@@ -33,7 +33,7 @@ func (d *departmentSuite) SetupTest() {
 }
 
 func (d *departmentSuite) SeedDepartment(departments []domain.Department) (err error) {
-	departmentRepo := repo.NewDepartmentRepository(d.DB)
+	departmentRepo := repo.New(d.DB)
 	g, ctx := errgroup.WithContext(context.Background())
 
 	for _, v := range departments {
@@ -52,7 +52,7 @@ func (d *departmentSuite) SeedDepartment(departments []domain.Department) (err e
 }
 
 func (d *departmentSuite) TestCreate() {
-	departmentRepo := repo.NewDepartmentRepository(d.DB)
+	departmentRepo := repo.New(d.DB)
 
 	d.T().Run("success", func(t *testing.T) {
 		var department domain.Department
@@ -79,7 +79,7 @@ func (d *departmentSuite) TestCreate() {
 }
 
 func (d *departmentSuite) TestGet() {
-	departmentRepo := repo.NewDepartmentRepository(d.DB)
+	departmentRepo := repo.New(d.DB)
 
 	d.T().Run("success", func(t *testing.T) {
 		var department domain.Department
@@ -114,7 +114,7 @@ func (d *departmentSuite) TestGet() {
 }
 
 func (d *departmentSuite) TestFetch() {
-	departmentRepo := repo.NewDepartmentRepository(d.DB)
+	departmentRepo := repo.New(d.DB)
 
 	var department1, department2, department3, department4 domain.Department
 
@@ -227,7 +227,7 @@ func (d *departmentSuite) TestFetch() {
 }
 
 func (d *departmentSuite) TestUpdate() {
-	departmentRepo := repo.NewDepartmentRepository(d.DB)
+	departmentRepo := repo.New(d.DB)
 
 	var department domain.Department
 	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department)
@@ -248,7 +248,7 @@ func (d *departmentSuite) TestUpdate() {
 }
 
 func (d *departmentSuite) TestDelete() {
-	departmentRepo := repo.NewDepartmentRepository(d.DB)
+	departmentRepo := repo.New(d.DB)
 
 	var department1, department2 domain.Department
 	testdata.UnmarshallGoldenToJSON(d.T(), "department-0ujssxh0cECutqzMgbtXSGnjorm", &department1)

@@ -12,25 +12,24 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
-	employee "github.com/milhamhidayat/golang-clean-code-v2/domain"
 	"github.com/milhamhidayat/golang-clean-code-v2/pkg/cursor"
 	ntime "github.com/milhamhidayat/golang-clean-code-v2/pkg/time"
 )
 
-// DepartmentRepository implement all method from interface
-type DepartmentRepository struct {
+// Repository implement all department method from interface
+type Repository struct {
 	DB *sql.DB
 }
 
-// NewDepartmentRepository return new department repository
-func NewDepartmentRepository(db *sql.DB) DepartmentRepository {
-	return DepartmentRepository{
+// New return new department repository
+func New(db *sql.DB) Repository {
+	return Repository{
 		DB: db,
 	}
 }
 
-// Create is a repository to insert an article
-func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department) (err error) {
+// Create is a repository to insert a department
+func (r Repository) Create(ctx context.Context, d *domain.Department) (err error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "error starting transaction")
@@ -77,8 +76,8 @@ func (r DepartmentRepository) Create(ctx context.Context, d *employee.Department
 	return nil
 }
 
-// Fetch is a repository to fetch articles based on parameter
-func (r DepartmentRepository) Fetch(ctx context.Context, filter employee.DepartmentFilter) (departments []employee.Department, nextCursor string, err error) {
+// Fetch is a repository to fetch department based on parameter
+func (r Repository) Fetch(ctx context.Context, filter domain.DepartmentFilter) (departments []domain.Department, nextCursor string, err error) {
 	qSelect := sq.Select("id", "name", "description", "created_time", "updated_time").
 		From("departments")
 
@@ -158,8 +157,8 @@ func (r DepartmentRepository) Fetch(ctx context.Context, filter employee.Departm
 	return
 }
 
-// Get is a repository to get an article based on parameter
-func (r DepartmentRepository) Get(ctx context.Context, departmentID string) (department employee.Department, err error) {
+// Get is a repository to get a department based on parameter
+func (r Repository) Get(ctx context.Context, departmentID string) (department domain.Department, err error) {
 	query, args, err := sq.Select("id", "name", "description", "created_time", "updated_time").
 		From("departments").
 		Where(sq.Eq{"id": departmentID}).
@@ -190,8 +189,8 @@ func (r DepartmentRepository) Get(ctx context.Context, departmentID string) (dep
 	return
 }
 
-// Update is a repository to update an article
-func (r DepartmentRepository) Update(ctx context.Context, d employee.Department) (department employee.Department, err error) {
+// Update is a repository to update a department
+func (r Repository) Update(ctx context.Context, d domain.Department) (department domain.Department, err error) {
 	localTime, err := ntime.GetLocalTime()
 	if err != nil {
 		return
@@ -245,8 +244,8 @@ func (r DepartmentRepository) Update(ctx context.Context, d employee.Department)
 	return
 }
 
-// Delete is a repository to delete an article
-func (r DepartmentRepository) Delete(ctx context.Context, departmentID string) (err error) {
+// Delete is a repository to delete a department
+func (r Repository) Delete(ctx context.Context, departmentID string) (err error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return
