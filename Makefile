@@ -107,7 +107,7 @@ unittest: vendor
 
 .PHONY: test
 test: vendor
-	GO111MODULE=on go test $(TEST_OPTS) ./...
+	GO111MODULE=on go test -p 1 $(TEST_OPTS) ./...
 
 # Mockery
 DepartmentUseCase:
