@@ -11,7 +11,6 @@ type DepartmentFilter struct {
 	Keyword string
 	Num     int
 	Cursor  string
-	Dept    string
 }
 
 // Department represent department data
