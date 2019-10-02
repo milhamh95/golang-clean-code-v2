@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 //EmployeeFilter reqpresent query filter
 type EmployeeFilter struct {
@@ -22,4 +25,9 @@ type Employee struct {
 	Department  Department
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
+}
+
+// EmployeeRepository represent repository contract for employee
+type EmployeeRepository interface {
+	Create(ctx context.Context, e *Employee) (err error)
 }

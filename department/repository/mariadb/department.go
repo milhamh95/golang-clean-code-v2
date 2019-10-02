@@ -16,7 +16,7 @@ import (
 	ntime "github.com/milhamhidayat/golang-clean-code-v2/pkg/time"
 )
 
-// Repository implement all department method from interface
+// Repository implement all department repository method from interface
 type Repository struct {
 	DB *sql.DB
 }
@@ -30,6 +30,11 @@ func New(db *sql.DB) Repository {
 
 // Create is a repository to insert a department
 func (r Repository) Create(ctx context.Context, d *domain.Department) (err error) {
+	localTime, err := ntime.GetLocalTime()
+	if err != nil {
+		return
+	}
+
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "error starting transaction")
@@ -41,9 +46,12 @@ func (r Repository) Create(ctx context.Context, d *domain.Department) (err error
 		d.ID = collectionID
 	}
 
+	d.CreatedTime = localTime
+	d.UpdatedTime = localTime
+
 	query, args, err := sq.Insert("departments").
-		Columns("id", "name", "description").
-		Values(d.ID, d.Name, d.Description).
+		Columns("id", "name", "description", "created_time", "updated_time").
+		Values(d.ID, d.Name, d.Description, d.CreatedTime, d.UpdatedTime).
 		ToSql()
 	if err != nil {
 		rollback(tx)
