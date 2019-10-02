@@ -1,9 +1,13 @@
 package domain
 
+<<<<<<< HEAD
 import (
 	"context"
 	"time"
 )
+=======
+import "time"
+>>>>>>> c1aec2032cc742e55d73017551732d03c6708491
 
 //EmployeeFilter reqpresent query filter
 type EmployeeFilter struct {
