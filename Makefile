@@ -116,4 +116,7 @@ DepartmentUseCase:
 DepartmentRepository:
 	@mockery -dir=domain -name=DepartmentRepository -output=domain/mocks
 
+EmployeeRepository:
+	@mockery -dir=domain -name=EmployeeRepository -output=domain/mocks
+
 

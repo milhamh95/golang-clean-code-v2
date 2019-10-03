@@ -1,13 +1,9 @@
 package domain
 
-<<<<<<< HEAD
 import (
 	"context"
 	"time"
 )
-=======
-import "time"
->>>>>>> c1aec2032cc742e55d73017551732d03c6708491
 
 //EmployeeFilter reqpresent query filter
 type EmployeeFilter struct {
@@ -34,4 +30,8 @@ type Employee struct {
 // EmployeeRepository represent repository contract for employee
 type EmployeeRepository interface {
 	Create(ctx context.Context, e *Employee) (err error)
+	Fetch(ctx context.Context, filter EmployeeFilter) (employees []Employee, nextCursor string, err error)
+	Get(ctx context.Context, employeeID string) (employee Employee, err error)
+	Update(ctx context.Context, e Employee) (employee Employee, err error)
+	Delete(ctx context.Context, employeeID string) (err error)
 }
