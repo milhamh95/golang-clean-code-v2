@@ -20,11 +20,11 @@ type departmentSuite struct {
 	mariadb.DBSuite
 }
 
-func TestDepartmentSuite(d *testing.T) {
+func TestDepartmentSuite(t *testing.T) {
 	if testing.Short() {
-		d.Skip("Skipped for short testing")
+		t.Skip("Skipped for short testing")
 	}
-	suite.Run(d, new(departmentSuite))
+	suite.Run(t, new(departmentSuite))
 }
 
 func (d *departmentSuite) SetupTest() {

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 	"github.com/segmentio/ksuid"
 	log "github.com/sirupsen/logrus"
 
@@ -37,13 +36,12 @@ func (r Repository) Create(ctx context.Context, d *domain.Department) (err error
 
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
-		err = errors.Wrap(err, "error starting transaction")
 		return
 	}
 
-	collectionID := ksuid.New().String()
+	departmentID := ksuid.New().String()
 	if d.ID == "" {
-		d.ID = collectionID
+		d.ID = departmentID
 	}
 
 	d.CreatedTime = localTime
@@ -54,15 +52,13 @@ func (r Repository) Create(ctx context.Context, d *domain.Department) (err error
 		Values(d.ID, d.Name, d.Description, d.CreatedTime, d.UpdatedTime).
 		ToSql()
 	if err != nil {
-		rollback(tx)
-		err = errors.Wrap(err, "error generating query")
+		r.rollback(tx)
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		rollback(tx)
-		err = errors.Wrap(err, "error prepare context")
+		r.rollback(tx)
 		return
 	}
 
@@ -75,8 +71,7 @@ func (r Repository) Create(ctx context.Context, d *domain.Department) (err error
 
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
-		rollback(tx)
-		err = errors.Wrap(err, "error when inserting department")
+		r.rollback(tx)
 		return
 	}
 
@@ -172,7 +167,6 @@ func (r Repository) Get(ctx context.Context, departmentID string) (department do
 		Where(sq.Eq{"id": departmentID}).
 		ToSql()
 	if err != nil {
-		err = errors.Wrap(err, "error when building query")
 		return
 	}
 
@@ -187,10 +181,8 @@ func (r Repository) Get(ctx context.Context, departmentID string) (department do
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = errors.New("data is not found")
 			return
 		}
-		err = errors.Wrap(err, "error scan the result")
 		return
 	}
 
@@ -218,13 +210,13 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 		Where(sq.Eq{"id": d.ID}).
 		ToSql()
 	if err != nil {
-		rollback(tx)
+		r.rollback(tx)
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		rollback(tx)
+		r.rollback(tx)
 		return
 	}
 
@@ -237,7 +229,7 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
-		rollback(tx)
+		r.rollback(tx)
 	}
 
 	err = tx.Commit()
@@ -263,13 +255,13 @@ func (r Repository) Delete(ctx context.Context, departmentID string) (err error)
 		Where(sq.Eq{"id": departmentID}).
 		ToSql()
 	if err != nil {
-		rollback(tx)
+		r.rollback(tx)
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		rollback(tx)
+		r.rollback(tx)
 		return
 	}
 
@@ -282,7 +274,7 @@ func (r Repository) Delete(ctx context.Context, departmentID string) (err error)
 
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
-		rollback(tx)
+		r.rollback(tx)
 		return
 	}
 
@@ -290,7 +282,7 @@ func (r Repository) Delete(ctx context.Context, departmentID string) (err error)
 	return
 }
 
-func rollback(tx *sql.Tx) {
+func (r Repository) rollback(tx *sql.Tx) {
 	err := tx.Rollback()
 	if err != nil && err != sql.ErrTxDone {
 		log.Error(err)
