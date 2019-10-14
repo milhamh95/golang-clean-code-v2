@@ -1,0 +1,13 @@
+{
+    "id": "1S9XpJCvJbt1plvU36tAcJWS2ZW",
+    "first_name": "Emilia",
+    "last_name": "Easby",
+    "birth_place": "Jakarta",
+    "date_of_birth": "1995-02-13",
+    "title": "Senior Developer",
+    "department": {
+        "id": "0ujsswThIGTUYm2K8FjOOfXtY1K"
+    },
+    "created_time": "2019-10-13T15:04:05+07:00",
+    "updated_time": "2019-10-13T15:04:05+07:00"
+}

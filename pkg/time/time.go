@@ -41,7 +41,6 @@ func ConvertToUTCTime(date time.Time) (finalDate time.Time, err error) {
 	}
 	finalDate, err = ConvertTimeToDifferentTimezone(date, loc)
 	if err != nil {
-
 		return
 	}
 	return

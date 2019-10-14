@@ -3,6 +3,9 @@ package mariadb
 import (
 	"context"
 	"database/sql"
+	"time"
+
+	"github.com/go-sql-driver/mysql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/friendsofgo/errors"
@@ -53,7 +56,7 @@ func (r Repository) Create(ctx context.Context, e *domain.Employee) (err error) 
 	e.CreatedTime = localTime
 	e.UpdatedTime = localTime
 
-	query, args, err := sq.Insert("employee").
+	query, args, err := sq.Insert("employees").
 		Columns("id", "first_name", "last_name", "birth_place", "date_of_birth", "title", "dept_id", "created_time", "updated_time").
 		Values(e.ID, e.FirstName, lastname, e.BirthPlace, e.DateOfBirth, e.Title, e.Department.ID, e.CreatedTime, e.UpdatedTime).
 		ToSql()
@@ -87,7 +90,7 @@ func (r Repository) Create(ctx context.Context, e *domain.Employee) (err error) 
 
 // Get is a repository to get an employee
 func (r Repository) Get(ctx context.Context, employeeID string) (employee domain.Employee, err error) {
-	query, args, err := sq.Select("id", "first_name", "last_name", "birth_place", "date_of_birth", "title", "dept_id").
+	query, args, err := sq.Select("id", "first_name", "last_name", "birth_place", "date_of_birth", "title", "dept_id", "created_time", "updated_time").
 		From("employees").
 		Where(sq.Eq{"id": employeeID}).
 		ToSql()
@@ -96,6 +99,9 @@ func (r Repository) Get(ctx context.Context, employeeID string) (employee domain
 	}
 
 	lastname := sql.NullString{}
+	dateOfBirth := mysql.NullTime{}
+	createdTime := mysql.NullTime{}
+	updatedTime := mysql.NullTime{}
 
 	row := r.DB.QueryRowContext(ctx, query, args...)
 	err = row.Scan(
@@ -103,9 +109,11 @@ func (r Repository) Get(ctx context.Context, employeeID string) (employee domain
 		&employee.FirstName,
 		&lastname,
 		&employee.BirthPlace,
-		&employee.DateOfBirth,
+		&dateOfBirth,
 		&employee.Title,
 		&employee.Department.ID,
+		&createdTime,
+		&updatedTime,
 	)
 
 	if err != nil {
@@ -116,6 +124,10 @@ func (r Repository) Get(ctx context.Context, employeeID string) (employee domain
 		return
 	}
 
+	employee.LastName = lastname.String
+	employee.DateOfBirth = r.convertDate(dateOfBirth.Time)
+	employee.CreatedTime = createdTime.Time
+	employee.UpdatedTime = updatedTime.Time
 	return
 }
 
@@ -139,4 +151,8 @@ func (r Repository) rollback(tx *sql.Tx, msg string) {
 	if err != nil && err != sql.ErrTxDone {
 		log.Error(errors.Wrap(err, msg))
 	}
+}
+
+func (r Repository) convertDate(date time.Time) string {
+	return date.Format("2006-01-02")
 }

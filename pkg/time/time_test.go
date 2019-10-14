@@ -40,10 +40,7 @@ func TestConvertToUTCTime(t *testing.T) {
 
 		result, err := nTime.ConvertToUTCTime(newLocalTime)
 		require.NoError(t, err)
-
 		require.Equal(t, newExpectedTime, result)
-		t.Log(newExpectedTime)
-		t.Log(result)
 	})
 
 	t.Run("failed parsing time", func(t *testing.T) {
@@ -72,8 +69,6 @@ func TestConvertTimeToDifferentTimezone(t *testing.T) {
 		result, err := nTime.ConvertTimeToDifferentTimezone(localTime, loc)
 		require.NoError(t, err)
 		require.Equal(t, newExpectedTime, result)
-		t.Log(result)
-		t.Log(newExpectedTime)
 	})
 
 	t.Run("error parsing time", func(t *testing.T) {

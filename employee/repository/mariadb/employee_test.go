@@ -11,6 +11,7 @@ import (
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 	mariadb "github.com/milhamhidayat/golang-clean-code-v2/driver/mariadb"
 	repo "github.com/milhamhidayat/golang-clean-code-v2/employee/repository/mariadb"
+	ntime "github.com/milhamhidayat/golang-clean-code-v2/pkg/time"
 	"github.com/milhamhidayat/golang-clean-code-v2/testdata"
 )
 
@@ -54,8 +55,8 @@ func (e *employeeSuite) SeedEmployee(employees []domain.Employee) (err error) {
 func (e *employeeSuite) SeedDepartment(departments []domain.Department) (err error) {
 	c := context.Background()
 
-	stmt, err := e.DB.PrepareContext(c, `INSERT INTO department (id, name, description, created_time, updated_time) VALUES (?,?,?,?,?)`)
-	require.NoError(t, err)
+	stmt, err := e.DB.PrepareContext(c, `INSERT INTO departments (id, name, description, created_time, updated_time) VALUES (?,?,?,?,?)`)
+	require.NoError(e.T(), err)
 	defer stmt.Close()
 
 	g, ctx := errgroup.WithContext(c)
@@ -68,16 +69,55 @@ func (e *employeeSuite) SeedDepartment(departments []domain.Department) (err err
 	}
 
 	err = g.Wait()
-	require.NoError(e.T(), err)
+	return
 }
 
 func (e *employeeSuite) TestCreate() {
 	employeeRepo := repo.New(e.DB)
 
 	e.T().Run("success", func(t *testing.T) {
-		var department domain.Department
 		var employee domain.Employee
-		testdata.UnmarshallGoldenToJSON(t, "department-0ujssxh0cECutqzMgbtXSGnjorm", &department)
+		testdata.UnmarshallGoldenToJSON(t, "employee-1S9XpJCvJbt1plvU36tAcJWS2ZW", &employee)
 
+		err := employeeRepo.Create(context.Background(), &employee)
+		require.NoError(t, err)
+
+		newTime, err := ntime.ConvertToUTCTime(employee.CreatedTime)
+		require.NoError(t, err)
+
+		employee.CreatedTime = newTime
+		employee.UpdatedTime = newTime
+
+		emp, err := employeeRepo.Get(context.Background(), employee.ID)
+		require.NoError(t, err)
+		require.Equal(t, emp, employee)
+	})
+}
+
+func (e *employeeSuite) TestGet() {
+	employeeRepo := repo.New(e.DB)
+
+	e.T().Run("success", func(t *testing.T) {
+		var employee domain.Employee
+		testdata.UnmarshallGoldenToJSON(t, "employee-1S9XpJCvJbt1plvU36tAcJWS2ZW", &employee)
+
+		localTime, err := ntime.GetLocalTime()
+		require.NoError(t, err)
+
+		employee.CreatedTime = localTime
+		employee.UpdatedTime = localTime
+
+		err = e.SeedEmployee([]domain.Employee{employee})
+		require.NoError(t, err)
+
+		newTime, err := ntime.ConvertToUTCTime(employee.CreatedTime)
+		require.NoError(t, err)
+
+		employee.CreatedTime = newTime
+		employee.UpdatedTime = newTime
+
+		emp, err := employeeRepo.Get(context.Background(), employee.ID)
+		require.NoError(t, err)
+		require.Equal(t, emp, employee)
 	})
 }
