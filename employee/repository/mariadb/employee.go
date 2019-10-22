@@ -3,6 +3,8 @@ package mariadb
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -13,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
+	"github.com/milhamhidayat/golang-clean-code-v2/pkg/cursor"
 	ntime "github.com/milhamhidayat/golang-clean-code-v2/pkg/time"
 )
 
@@ -133,6 +136,103 @@ func (r Repository) Get(ctx context.Context, employeeID string) (employee domain
 
 // Fetch is a repository to fetch employees
 func (r Repository) Fetch(ctx context.Context, filter domain.EmployeeFilter) (employees []domain.Employee, nextCursor string, err error) {
+	employees = make([]domain.Employee, 0)
+	qSelect := sq.Select("id", "first_name", "last_name", "birth_place", "date_of_birth", "title", "dept_id", "created_time", "updated_time").
+		From("employees")
+
+	if len(filter.IDs) != 0 {
+		qSelect = qSelect.Where(sq.Eq{"id": filter.IDs})
+		qField := strings.Repeat(",?", len(filter.IDs))
+		qOrderBy := fmt.Sprintf("ORDER BY FIELD(id%s)", qField)
+		qSelect = qSelect.Suffix(qOrderBy)
+	} else if len(filter.DeptIDs) != 0 {
+		qSelect = qSelect.Where(sq.Eq{"id": filter.IDs})
+		qField := strings.Repeat(",?", len(filter.IDs))
+		qOrderBy := fmt.Sprintf("ORDER BY FIELD(id%s)", qField)
+		qSelect = qSelect.OrderBy(qOrderBy)
+	} else {
+		qSelect = qSelect.OrderBy("id desc")
+
+		if filter.Keyword != "" {
+			qSelect = qSelect.Where(`first_name LIKE ?`, fmt.Sprint("%", filter.Keyword, "%"))
+		}
+
+		if filter.Cursor != "" {
+			var id string
+			id, er := cursor.DecodeBase64(filter.Cursor)
+			if er != nil {
+				err = er
+				return
+			}
+			qSelect = qSelect.Where(sq.Lt{"id": id})
+		}
+	}
+
+	query, args, err := qSelect.ToSql()
+	if err != nil {
+		return
+	}
+
+	if len(filter.IDs) != 0 || len(filter.DeptIDs) != 0 {
+		args = append(args, args...)
+	}
+
+	rows, err := r.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
+	for rows.Next() {
+		lastname := sql.NullString{}
+		dateOfBirth := mysql.NullTime{}
+		createdTime := mysql.NullTime{}
+		updatedTime := mysql.NullTime{}
+		e := domain.Employee{}
+
+		err = rows.Scan(
+			&e.ID,
+			&e.FirstName,
+			&lastname,
+			&e.BirthPlace,
+			&dateOfBirth,
+			&e.Title,
+			&e.Department.ID,
+			&createdTime,
+			&updatedTime,
+		)
+		if err != nil {
+			return
+		}
+
+		e.LastName = lastname.String
+		e.DateOfBirth = r.convertDate(dateOfBirth.Time)
+		e.CreatedTime = createdTime.Time
+		e.UpdatedTime = updatedTime.Time
+		employees = append(employees, e)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return
+	}
+
+	if len(filter.IDs) != 0 {
+		return
+	}
+
+	nextCursor = filter.Cursor
+	if len(employees) >= 1 {
+		id := employees[len(employees)-1].ID
+		nextCursor = cursor.EncodeBase64(id)
+	}
+
 	return
 }
 

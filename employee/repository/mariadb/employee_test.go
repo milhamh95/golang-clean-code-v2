@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/sync/errgroup"
@@ -27,13 +28,14 @@ func TestEmployeeSuite(t *testing.T) {
 }
 
 func (e *employeeSuite) SetupTest() {
-	_, err := e.DB.Exec("TRUNCATE departments")
+	_, err := e.DB.Exec("DELETE FROM employees")
 	require.NoError(e.T(), err)
-	_, err = e.DB.Exec("TRUNCATE employees")
+	_, err = e.DB.Exec("DELETE FROM departments")
 	require.NoError(e.T(), err)
 }
 
 func (e *employeeSuite) SeedEmployee(employees []domain.Employee) (err error) {
+	e.T().Helper()
 	employeeRepo := repo.New(e.DB)
 	g, ctx := errgroup.WithContext(context.Background())
 
@@ -53,6 +55,7 @@ func (e *employeeSuite) SeedEmployee(employees []domain.Employee) (err error) {
 }
 
 func (e *employeeSuite) SeedDepartment(departments []domain.Department) (err error) {
+	e.T().Helper()
 	c := context.Background()
 
 	stmt, err := e.DB.PrepareContext(c, `INSERT INTO departments (id, name, description, created_time, updated_time) VALUES (?,?,?,?,?)`)
@@ -76,10 +79,17 @@ func (e *employeeSuite) TestCreate() {
 	employeeRepo := repo.New(e.DB)
 
 	e.T().Run("success", func(t *testing.T) {
-		var employee domain.Employee
+		var (
+			department domain.Department
+			employee   domain.Employee
+		)
+		testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
 		testdata.UnmarshallGoldenToJSON(t, "employee-1S9XpJCvJbt1plvU36tAcJWS2ZW", &employee)
 
-		err := employeeRepo.Create(context.Background(), &employee)
+		err := e.SeedDepartment([]domain.Department{department})
+		require.NoError(t, err)
+
+		err = employeeRepo.Create(context.Background(), &employee)
 		require.NoError(t, err)
 
 		newTime, err := ntime.ConvertToUTCTime(employee.CreatedTime)
@@ -98,8 +108,15 @@ func (e *employeeSuite) TestGet() {
 	employeeRepo := repo.New(e.DB)
 
 	e.T().Run("success", func(t *testing.T) {
-		var employee domain.Employee
+		var (
+			department domain.Department
+			employee   domain.Employee
+		)
+		testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
 		testdata.UnmarshallGoldenToJSON(t, "employee-1S9XpJCvJbt1plvU36tAcJWS2ZW", &employee)
+
+		err := e.SeedDepartment([]domain.Department{department})
+		require.NoError(t, err)
 
 		localTime, err := ntime.GetLocalTime()
 		require.NoError(t, err)
@@ -119,5 +136,59 @@ func (e *employeeSuite) TestGet() {
 		emp, err := employeeRepo.Get(context.Background(), employee.ID)
 		require.NoError(t, err)
 		require.Equal(t, emp, employee)
+	})
+
+	e.T().Run("not found", func(t *testing.T) {
+		expectedErr := errors.New("employee is not found: 1")
+		_, err := employeeRepo.Get(context.Background(), "1")
+		require.EqualError(t, err, expectedErr.Error())
+	})
+}
+
+func (e *employeeSuite) TestFetch() {
+	employeeRepo := repo.New(e.DB)
+
+	var employee1, employee2 domain.Employee
+
+	testdata.UnmarshallGoldenToJSON(e.T(), "employee-1S9XpJCvJbt1plvU36tAcJWS2ZW", &employee1)
+	testdata.UnmarshallGoldenToJSON(e.T(), "employee-1SYxHnSCbFCxLr7zUxk5j8cB0Cr", &employee2)
+
+	employees := make([]domain.Employee, 2)
+	employees[0] = employee1
+	employees[1] = employee2
+
+	for i := range employees {
+		date, err := ntime.GetLocalTime()
+		require.NoError(e.T(), err)
+		employees[i].CreatedTime = date
+		employees[i].UpdatedTime = date
+	}
+
+	err := e.SeedEmployee(employees)
+	require.NoError(e.T(), err)
+
+	e.T().Run("success with ids", func(t *testing.T) {
+		expectedEmployees := make([]domain.Employee, 2)
+		expectedEmployees[0] = employees[1]
+		expectedEmployees[1] = employees[0]
+
+		for i, v := range expectedEmployees {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			expectedEmployees[i].CreatedTime = utcTime
+			expectedEmployees[i].UpdatedTime = utcTime
+		}
+
+		emps, _, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
+			IDs: []string{expectedEmployees[0].ID, expectedEmployees[1].ID},
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, emps, expectedEmployees)
+	})
+
+	e.T().Run("success with dept ids", func(t *testing.T) {
+
 	})
 }

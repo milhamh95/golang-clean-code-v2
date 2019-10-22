@@ -1,3 +1,3 @@
 ALTER TABLE `employees`
-ADD COLUMN `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN `updated_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ADD COLUMN `created_time` timestamp NULL,
+ADD COLUMN `updated_time` timestamp NULL;
