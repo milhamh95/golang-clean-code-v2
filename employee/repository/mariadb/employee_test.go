@@ -100,7 +100,7 @@ func (e *employeeSuite) TestCreate() {
 
 		emp, err := employeeRepo.Get(context.Background(), employee.ID)
 		require.NoError(t, err)
-		require.Equal(t, emp, employee)
+		require.Equal(t, employee, emp)
 	})
 }
 
@@ -135,7 +135,7 @@ func (e *employeeSuite) TestGet() {
 
 		emp, err := employeeRepo.Get(context.Background(), employee.ID)
 		require.NoError(t, err)
-		require.Equal(t, emp, employee)
+		require.Equal(t, employee, emp)
 	})
 
 	e.T().Run("not found", func(t *testing.T) {
@@ -180,15 +180,87 @@ func (e *employeeSuite) TestFetch() {
 			expectedEmployees[i].UpdatedTime = utcTime
 		}
 
-		emps, _, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
+		emps, cursor, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
 			IDs: []string{expectedEmployees[0].ID, expectedEmployees[1].ID},
 		})
 
 		require.NoError(t, err)
-		require.Equal(t, emps, expectedEmployees)
+		require.Equal(t, expectedEmployees, emps)
+		require.Equal(t, "", cursor)
 	})
 
 	e.T().Run("success with dept ids", func(t *testing.T) {
+		expectedEmployees := make([]domain.Employee, 1)
+		expectedEmployees[0] = employees[1]
 
+		for i, v := range expectedEmployees {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			expectedEmployees[i].CreatedTime = utcTime
+			expectedEmployees[i].UpdatedTime = utcTime
+
+			emps, cursor, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
+				IDs: []string{expectedEmployees[0].ID},
+			})
+
+			require.NoError(t, err)
+			require.Equal(t, expectedEmployees, emps)
+			require.Equal(t, "", cursor)
+		}
+	})
+
+	e.T().Run("success with num", func(t *testing.T) {
+		expectedEmployees := make([]domain.Employee, 2)
+		expectedEmployees[0] = employees[1]
+		expectedEmployees[1] = employees[0]
+
+		for i, v := range expectedEmployees {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			expectedEmployees[i].CreatedTime = utcTime
+			expectedEmployees[i].UpdatedTime = utcTime
+		}
+
+		emps, cursor, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
+			Num: 2,
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, expectedEmployees, emps)
+		require.Equal(t, "MVM5WHBKQ3ZKYnQxcGx2VTM2dEFjSldTMlpX", cursor)
+	})
+
+	e.T().Run("success with second page using num and cursor", func(t *testing.T) {
+		emps, cursor, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
+			Num:    2,
+			Cursor: "MVM5WHBKQ3ZKYnQxcGx2VTM2dEFjSldTMlpX",
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, []domain.Employee{}, emps)
+		require.Equal(t, "MVM5WHBKQ3ZKYnQxcGx2VTM2dEFjSldTMlpX", cursor)
+	})
+
+	e.T().Run("success with keyword", func(t *testing.T) {
+		expectedEmployees := make([]domain.Employee, 1)
+		expectedEmployees[0] = employees[1]
+
+		for i, v := range expectedEmployees {
+			utcTime, err := ntime.ConvertToUTCTime(v.CreatedTime)
+			require.NoError(t, err)
+
+			expectedEmployees[i].CreatedTime = utcTime
+			expectedEmployees[i].UpdatedTime = utcTime
+		}
+
+		emps, cursor, err := employeeRepo.Fetch(context.Background(), domain.EmployeeFilter{
+			Keyword: "casey",
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, expectedEmployees, emps)
+		require.Equal(t, "MVNZeEhuU0NiRkN4THI3elV4azVqOGNCMENy", cursor)
 	})
 }

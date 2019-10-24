@@ -105,6 +105,10 @@ func (r Repository) Fetch(ctx context.Context, filter domain.DepartmentFilter) (
 			}
 			qSelect = qSelect.Where(sq.Lt{"id": id})
 		}
+
+		if filter.Num > 0 {
+			qSelect = qSelect.Limit(uint64(filter.Num))
+		}
 	}
 
 	query, args, err := qSelect.ToSql()
