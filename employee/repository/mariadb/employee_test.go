@@ -264,3 +264,37 @@ func (e *employeeSuite) TestFetch() {
 		require.Equal(t, "MVNZeEhuU0NiRkN4THI3elV4azVqOGNCMENy", cursor)
 	})
 }
+
+func (e *employeeSuite) TestUpdate() {
+	employeeRepo := repo.New(e.DB)
+
+	var employee domain.Employee
+	testdata.UnmarshallGoldenToJSON(e.T(), "employee-1SYxHnSCbFCxLr7zUxk5j8cB0Cr", &employee)
+
+	err := e.SeedEmployee([]domain.Employee{employee})
+	require.NoError(e.T(), err)
+
+	e.T().Run("success", func(t *testing.T) {
+		newEmployee := employee
+		employee.LastName = "Christa"
+
+		res, err := employeeRepo.Update(context.Background(), newEmployee)
+		require.NoError(t, err)
+		require.Equal(t, newEmployee.LastName, res.LastName)
+	})
+}
+
+func (e *employeeSuite) TestDelete() {
+	employeeRepo := repo.New(e.DB)
+
+	var employee domain.Employee
+	testdata.UnmarshallGoldenToJSON(e.T(), "employee-1SYxHnSCbFCxLr7zUxk5j8cB0Cr", &employee)
+
+	err := e.SeedEmployee([]domain.Employee{employee})
+	require.NoError(e.T(), err)
+
+	e.T().Run("success", func(t *testing.T) {
+		err := employeeRepo.Delete(context.Background(), employee.ID)
+		require.NoError(t, err)
+	})
+}

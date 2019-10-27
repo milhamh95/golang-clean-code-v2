@@ -234,6 +234,7 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
 		r.rollback(tx)
+		return
 	}
 
 	err = tx.Commit()

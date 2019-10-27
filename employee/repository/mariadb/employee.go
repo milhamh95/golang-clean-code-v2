@@ -5,12 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"time"
-
-	"github.com/go-sql-driver/mysql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/friendsofgo/errors"
+	"github.com/go-sql-driver/mysql"
 	"github.com/segmentio/ksuid"
 	log "github.com/sirupsen/logrus"
 
@@ -74,12 +72,7 @@ func (r Repository) Create(ctx context.Context, e *domain.Employee) (err error) 
 		return
 	}
 
-	defer func() {
-		err = stmt.Close()
-		if err != nil {
-			log.Error(errors.Wrap(err, "failed to close insert employee statement"))
-		}
-	}()
+	defer r.closeStatement(stmt)
 
 	_, err = stmt.ExecContext(ctx, args...)
 	if err != nil {
@@ -128,7 +121,7 @@ func (r Repository) Get(ctx context.Context, employeeID string) (employee domain
 	}
 
 	employee.LastName = lastname.String
-	employee.DateOfBirth = r.convertDate(dateOfBirth.Time)
+	employee.SetDateOfBirth(dateOfBirth.Time)
 	employee.CreatedTime = createdTime.Time
 	employee.UpdatedTime = updatedTime.Time
 	return
@@ -212,7 +205,7 @@ func (r Repository) Fetch(ctx context.Context, filter domain.EmployeeFilter) (em
 		}
 
 		e.LastName = lastname.String
-		e.DateOfBirth = r.convertDate(dateOfBirth.Time)
+		e.SetDateOfBirth(dateOfBirth.Time)
 		e.CreatedTime = createdTime.Time
 		e.UpdatedTime = updatedTime.Time
 		employees = append(employees, e)
@@ -238,11 +231,98 @@ func (r Repository) Fetch(ctx context.Context, filter domain.EmployeeFilter) (em
 
 // Update is a repository to update an employee
 func (r Repository) Update(ctx context.Context, e domain.Employee) (employee domain.Employee, err error) {
+	localTime, err := ntime.GetLocalTime()
+	if err != nil {
+		return
+	}
+
+	lastname := sql.NullString{}
+
+	if e.LastName != "" {
+		lastname = sql.NullString{
+			Valid:  true,
+			String: e.LastName,
+		}
+	}
+
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return
+	}
+
+	query, args, err := sq.Update("employees").
+		SetMap(sq.Eq{
+			"first_name":    e.FirstName,
+			"last_name":     lastname,
+			"birth_place":   e.BirthPlace,
+			"date_of_birth": e.DateOfBirth,
+			"title":         e.Title,
+			"dept_id":       e.Department.ID,
+			"updated_time":  localTime,
+		}).
+		Where(sq.Eq{"id": e.ID}).
+		ToSql()
+	if err != nil {
+		r.rollback(tx, "failed to prepare update employee query")
+		return
+	}
+
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		r.rollback(tx, "failed to prepared update employee statement")
+		return
+	}
+
+	defer r.closeStatement(stmt)
+
+	_, err = stmt.ExecContext(ctx, args...)
+	if err != nil {
+		r.rollback(tx, "failed to update employee")
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return
+	}
+
+	employee, err = r.Get(ctx, e.ID)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
 // Delete is a repository to delete an employee
 func (r Repository) Delete(ctx context.Context, employeeID string) (err error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return
+	}
+
+	query, args, err := sq.Delete("employees").
+		Where(sq.Eq{"id": employeeID}).
+		ToSql()
+	if err != nil {
+		r.rollback(tx, "failed to prepare delete employee query")
+		return
+	}
+
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		r.rollback(tx, "failed to prepare delete employee statement")
+	}
+
+	defer r.closeStatement(stmt)
+
+	_, err = stmt.ExecContext(ctx, args...)
+	if err != nil {
+		r.rollback(tx, "failed to execute delete employee")
+		return
+	}
+
+	err = tx.Commit()
 	return
 }
 
@@ -253,6 +333,9 @@ func (r Repository) rollback(tx *sql.Tx, msg string) {
 	}
 }
 
-func (r Repository) convertDate(date time.Time) string {
-	return date.Format("2006-01-02")
+func (r Repository) closeStatement(stmt *sql.Stmt) {
+	err := stmt.Close()
+	if err != nil {
+		log.Error(err)
+	}
 }

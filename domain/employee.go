@@ -35,3 +35,8 @@ type EmployeeRepository interface {
 	Update(ctx context.Context, e Employee) (employee Employee, err error)
 	Delete(ctx context.Context, employeeID string) (err error)
 }
+
+// SetDateOfBirth will set date of birth
+func (e *Employee) SetDateOfBirth(date time.Time) {
+	e.DateOfBirth = date.Format("2006-01-02")
+}

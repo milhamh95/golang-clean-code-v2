@@ -1,2 +1,2 @@
 ALTER TABLE `employees`
-DROP COLUMN `created_time`, `updated_time`;
+DROP `created_time`, DROP `updated_time`;
