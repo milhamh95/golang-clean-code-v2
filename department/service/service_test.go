@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/friendsofgo/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/milhamhidayat/golang-clean-code-v2/department/service"
@@ -27,6 +28,16 @@ func TestCreate(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		"error": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Create": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), &domain.Department{}},
+					Output: []interface{}{errors.New("unexpected error")},
+				},
+			},
+			expectedError: errors.New("unexpected error"),
+		},
 	}
 
 	mockDepartmentRepo := new(mocks.DepartmentRepository)
@@ -44,7 +55,13 @@ func TestCreate(t *testing.T) {
 
 			mockDepartmentRepo.AssertExpectations(t)
 
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+				return
+			}
+
 			require.NoError(t, err)
+
 		})
 	}
 }
