@@ -76,7 +76,19 @@ func (r Repository) Create(ctx context.Context, d *domain.Department) (err error
 	}
 
 	err = tx.Commit()
-	return nil
+	if err != nil {
+		r.rollback(tx)
+		return
+	}
+
+	dept, err := r.Get(ctx, d.ID)
+	if err != nil {
+		return
+	}
+
+	d = &dept
+
+	return
 }
 
 // Fetch is a repository to fetch department based on parameter

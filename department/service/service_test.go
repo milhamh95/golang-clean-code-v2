@@ -14,6 +14,11 @@ import (
 )
 
 func TestCreate(t *testing.T) {
+	var department domain.Department
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
+
+	mockDepartmentRepo := new(mocks.DepartmentRepository)
+
 	tests := map[string]struct {
 		departmentRepo map[string]testdata.FuncCall
 		expectedError  error
@@ -22,7 +27,7 @@ func TestCreate(t *testing.T) {
 			departmentRepo: map[string]testdata.FuncCall{
 				"Create": testdata.FuncCall{
 					Called: true,
-					Input:  []interface{}{context.Background(), &domain.Department{}},
+					Input:  []interface{}{context.Background(), &department},
 					Output: []interface{}{nil},
 				},
 			},
@@ -32,15 +37,13 @@ func TestCreate(t *testing.T) {
 			departmentRepo: map[string]testdata.FuncCall{
 				"Create": testdata.FuncCall{
 					Called: true,
-					Input:  []interface{}{context.Background(), &domain.Department{}},
+					Input:  []interface{}{context.Background(), &department},
 					Output: []interface{}{errors.New("unexpected error")},
 				},
 			},
 			expectedError: errors.New("unexpected error"),
 		},
 	}
-
-	mockDepartmentRepo := new(mocks.DepartmentRepository)
 
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
@@ -51,7 +54,7 @@ func TestCreate(t *testing.T) {
 			}
 
 			departmentService := service.New(mockDepartmentRepo)
-			err := departmentService.Create(context.Background(), &domain.Department{})
+			err := departmentService.Create(context.Background(), &department)
 
 			mockDepartmentRepo.AssertExpectations(t)
 
@@ -61,7 +64,6 @@ func TestCreate(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-
 		})
 	}
 }
