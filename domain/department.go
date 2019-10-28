@@ -22,8 +22,8 @@ type Department struct {
 	UpdatedTime time.Time `json:"updated_time"`
 }
 
-// DepartmentUseCase represent use case contract for department
-type DepartmentUseCase interface {
+// DepartmentService represent service contract for department
+type DepartmentService interface {
 	Create(ctx context.Context, d *Department) (err error)
 	Fetch(ctx context.Context, filter DepartmentFilter) (departments []Department, nextCursor string, err error)
 	Get(ctx context.Context, departmentID string) (department Department, err error)

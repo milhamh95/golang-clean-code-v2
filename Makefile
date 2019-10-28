@@ -110,8 +110,8 @@ test: vendor
 	GO111MODULE=on go test -p 1 $(TEST_OPTS) ./...
 
 # Mockery
-DepartmentUseCase:
-	@mockery -dir=domain -name=DepartmentUseCase -output=domain/mocks
+DepartmentService:
+	@mockery -dir=domain -name=DepartmentService -output=domain/mocks
 
 DepartmentRepository:
 	@mockery -dir=domain -name=DepartmentRepository -output=domain/mocks
