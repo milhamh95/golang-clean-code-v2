@@ -39,7 +39,12 @@ func (s Service) Fetch(ctx context.Context, filter domain.DepartmentFilter) (dep
 
 // Get is a service to get a department
 func (s Service) Get(ctx context.Context, departmentID string) (department domain.Department, err error) {
-	return domain.Department{}, errors.New("not yet implemented")
+	department, err = s.Repository.Get(ctx, departmentID)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 // Update is a service to update a department

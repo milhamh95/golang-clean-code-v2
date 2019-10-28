@@ -67,3 +67,71 @@ func TestCreate(t *testing.T) {
 		})
 	}
 }
+
+func TestGet(t *testing.T) {
+	var department domain.Department
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
+
+	mockDepartmentRepo := new(mocks.DepartmentRepository)
+
+	tests := map[string]struct {
+		departmentRepo map[string]testdata.FuncCall
+		expectedRes    domain.Department
+		expectedErr    error
+	}{
+		"success": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department.ID},
+					Output: []interface{}{department, nil},
+				},
+			},
+			expectedRes: department,
+			expectedErr: nil,
+		},
+		"success with department not found": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department.ID},
+					Output: []interface{}{domain.Department{}, errors.New("department is not found")},
+				},
+			},
+			expectedRes: domain.Department{},
+			expectedErr: errors.New("department is not found"),
+		},
+		"with error from department repository": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department.ID},
+					Output: []interface{}{domain.Department{}, errors.New("unexpected error")},
+				},
+			},
+			expectedRes: domain.Department{},
+			expectedErr: errors.New("unexpected error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			for name, fn := range tc.departmentRepo {
+				if fn.Called {
+					mockDepartmentRepo.On(name, fn.Input...).Return(fn.Output...).Once()
+				}
+			}
+
+			departmentService := service.New(mockDepartmentRepo)
+			res, err := departmentService.Get(context.Background(), department.ID)
+
+			if tc.expectedErr != nil {
+				require.EqualError(t, err, tc.expectedErr.Error())
+				return
+			}
+
+			require.Equal(t, department, res)
+			require.NoError(t, err)
+		})
+	}
+}
