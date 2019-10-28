@@ -114,8 +114,8 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
 			for name, fn := range tc.departmentRepo {
 				if fn.Called {
 					mockDepartmentRepo.On(name, fn.Input...).Return(fn.Output...).Once()
@@ -125,12 +125,69 @@ func TestGet(t *testing.T) {
 			departmentService := service.New(mockDepartmentRepo)
 			res, err := departmentService.Get(context.Background(), department.ID)
 
+			mockDepartmentRepo.AssertExpectations(t)
+
 			if tc.expectedErr != nil {
 				require.EqualError(t, err, tc.expectedErr.Error())
 				return
 			}
 
 			require.Equal(t, department, res)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	var department domain.Department
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
+
+	mockDepartmentRepo := new(mocks.DepartmentRepository)
+
+	tests := map[string]struct {
+		departmentRepo map[string]testdata.FuncCall
+		expectedErr    error
+	}{
+		"success": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Delete": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department.ID},
+					Output: []interface{}{nil},
+				},
+			},
+			expectedErr: nil,
+		},
+		"with error from department repo": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Delete": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department.ID},
+					Output: []interface{}{errors.New("unexpected error")},
+				},
+			},
+			expectedErr: errors.New("unexpected error"),
+		},
+	}
+
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			for name, fn := range tc.departmentRepo {
+				if fn.Called {
+					mockDepartmentRepo.On(name, fn.Input...).Return(fn.Output...).Once()
+				}
+			}
+
+			departmentService := service.New(mockDepartmentRepo)
+			err := departmentService.Delete(context.Background(), department.ID)
+
+			mockDepartmentRepo.AssertExpectations(t)
+
+			if tc.expectedErr != nil {
+				require.EqualError(t, err, tc.expectedErr.Error())
+				return
+			}
+
 			require.NoError(t, err)
 		})
 	}

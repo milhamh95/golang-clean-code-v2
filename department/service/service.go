@@ -54,5 +54,10 @@ func (s Service) Update(ctx context.Context, d domain.Department) (department do
 
 // Delete is a service to delete a department
 func (s Service) Delete(ctx context.Context, departmentID string) (err error) {
-	return errors.New("not yet implemented")
+	err = s.Repository.Delete(context.Background(), departmentID)
+	if err != nil {
+		return
+	}
+
+	return
 }
