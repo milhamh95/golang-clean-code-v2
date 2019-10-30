@@ -83,7 +83,7 @@ func TestFetch(t *testing.T) {
 		expectedCursor string
 		expectedErr    error
 	}{
-		"success with num": {
+		"success with num first page": {
 			filter: domain.DepartmentFilter{Num: 2},
 			departmentRepo: map[string]testdata.FuncCall{
 				"Fetch": testdata.FuncCall{
@@ -95,6 +95,71 @@ func TestFetch(t *testing.T) {
 			expectedRes:    []domain.Department{department1, department2},
 			expectedCursor: "MHVqc3N4aDBjRUN1dHF6TWdidFhTR25qb3Jt",
 			expectedErr:    nil,
+		},
+		"success with num and cursor second page": {
+			filter: domain.DepartmentFilter{Num: 2, Cursor: "MHVqc3N4aDBjRUN1dHF6TWdidFhTR25qb3Jt"},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.DepartmentFilter{Num: 2, Cursor: "MHVqc3N4aDBjRUN1dHF6TWdidFhTR25qb3Jt"}},
+					Output: []interface{}{[]domain.Department{department3}, "MHVqc3N6Z0Z2YmlFcjdDRGdFM3o4TUFVUEZ0", nil},
+				},
+			},
+			expectedRes:    []domain.Department{department3},
+			expectedCursor: "MHVqc3N6Z0Z2YmlFcjdDRGdFM3o4TUFVUEZ0",
+			expectedErr:    nil,
+		},
+		"success with num and cursor end of page": {
+			filter: domain.DepartmentFilter{Num: 2, Cursor: "MHVqc3N6Z0Z2YmlFcjdDRGdFM3o4TUFVUEZ0"},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.DepartmentFilter{Num: 2, Cursor: "MHVqc3N6Z0Z2YmlFcjdDRGdFM3o4TUFVUEZ0"}},
+					Output: []interface{}{[]domain.Department{}, "MHVqc3N6Z0Z2YmlFcjdDRGdFM3o4TUFVUEZ0", nil},
+				},
+			},
+			expectedRes:    []domain.Department{},
+			expectedCursor: "MHVqc3N6Z0Z2YmlFcjdDRGdFM3o4TUFVUEZ0",
+			expectedErr:    nil,
+		},
+		"succes with ids": {
+			filter: domain.DepartmentFilter{IDs: []string{department1.ID, department3.ID}},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.DepartmentFilter{IDs: []string{department1.ID, department3.ID}}},
+					Output: []interface{}{[]domain.Department{department1, department3}, "", nil},
+				},
+			},
+			expectedRes:    []domain.Department{department1, department3},
+			expectedCursor: "",
+			expectedErr:    nil,
+		},
+		"success with keyword": {
+			filter: domain.DepartmentFilter{Keyword: "marketing"},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.DepartmentFilter{Keyword: "marketing"}},
+					Output: []interface{}{[]domain.Department{department1}, "", nil},
+				},
+			},
+			expectedRes:    []domain.Department{department1},
+			expectedCursor: "",
+			expectedErr:    nil,
+		},
+		"error fetch department": {
+			filter: domain.DepartmentFilter{Num: 2},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.DepartmentFilter{Num: 2}},
+					Output: []interface{}{[]domain.Department{}, "", errors.New("unknown error")},
+				},
+			},
+			expectedRes:    []domain.Department{},
+			expectedCursor: "",
+			expectedErr:    errors.New("unknown error"),
 		},
 	}
 
