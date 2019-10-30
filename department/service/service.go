@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 
-	"github.com/friendsofgo/errors"
-
 	domain "github.com/milhamhidayat/golang-clean-code-v2/domain"
 )
 
@@ -34,7 +32,13 @@ func (s Service) Create(ctx context.Context, d *domain.Department) (err error) {
 
 // Fetch is a service to fetch department
 func (s Service) Fetch(ctx context.Context, filter domain.DepartmentFilter) (departments []domain.Department, nextCursor string, err error) {
-	return []domain.Department{}, "", errors.New("not yet implemented")
+	departments, nextCursor, err = s.Repository.Fetch(ctx, filter)
+	if err != nil {
+		nextCursor = filter.Cursor
+		return
+	}
+
+	return
 }
 
 // Get is a service to get a department

@@ -80,6 +80,7 @@ func TestFetch(t *testing.T) {
 		filter         domain.DepartmentFilter
 		departmentRepo map[string]testdata.FuncCall
 		expectedRes    []domain.Department
+		expectedCursor string
 		expectedErr    error
 	}{
 		"success with num": {
@@ -88,11 +89,12 @@ func TestFetch(t *testing.T) {
 				"Fetch": testdata.FuncCall{
 					Called: true,
 					Input:  []interface{}{context.Background(), domain.DepartmentFilter{Num: 2}},
-					Output: []interface{}{[]domain.Department{department1, department2}},
+					Output: []interface{}{[]domain.Department{department1, department2}, "MHVqc3N4aDBjRUN1dHF6TWdidFhTR25qb3Jt", nil},
 				},
 			},
-			expectedRes: []domain.Department{department1, department2},
-			expectedErr: nil,
+			expectedRes:    []domain.Department{department1, department2},
+			expectedCursor: "MHVqc3N4aDBjRUN1dHF6TWdidFhTR25qb3Jt",
+			expectedErr:    nil,
 		},
 	}
 
@@ -116,7 +118,7 @@ func TestFetch(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, res, tc.expectedRes)
-			require.Equal(t, "", cursor)
+			require.Equal(t, cursor, tc.expectedCursor)
 		})
 	}
 }
