@@ -33,7 +33,7 @@ func TestCreate(t *testing.T) {
 			},
 			expectedError: nil,
 		},
-		"error": {
+		"error create department": {
 			departmentRepo: map[string]testdata.FuncCall{
 				"Create": testdata.FuncCall{
 					Called: true,
@@ -41,7 +41,7 @@ func TestCreate(t *testing.T) {
 					Output: []interface{}{errors.New("unexpected error")},
 				},
 			},
-			expectedError: errors.New("unexpected error"),
+			expectedError: errors.New("failed to create a department: unexpected error"),
 		},
 	}
 
@@ -159,7 +159,7 @@ func TestFetch(t *testing.T) {
 			},
 			expectedRes:    []domain.Department{},
 			expectedCursor: "",
-			expectedErr:    errors.New("unknown error"),
+			expectedErr:    errors.New("failed to fetch departments: unknown error"),
 		},
 	}
 
@@ -219,7 +219,7 @@ func TestGet(t *testing.T) {
 				},
 			},
 			expectedRes: domain.Department{},
-			expectedErr: errors.New("department is not found"),
+			expectedErr: errors.New("failed to get a department: department is not found"),
 		},
 		"with error from department repository": {
 			departmentRepo: map[string]testdata.FuncCall{
@@ -230,7 +230,7 @@ func TestGet(t *testing.T) {
 				},
 			},
 			expectedRes: domain.Department{},
-			expectedErr: errors.New("unexpected error"),
+			expectedErr: errors.New("failed to get a department: unexpected error"),
 		},
 	}
 
@@ -286,7 +286,7 @@ func TestDelete(t *testing.T) {
 					Output: []interface{}{errors.New("unexpected error")},
 				},
 			},
-			expectedErr: errors.New("unexpected error"),
+			expectedErr: errors.New("failed to delete a department: unexpected error"),
 		},
 	}
 

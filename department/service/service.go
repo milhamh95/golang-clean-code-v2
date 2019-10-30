@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/friendsofgo/errors"
+
 	domain "github.com/milhamhidayat/golang-clean-code-v2/domain"
 )
 
@@ -24,6 +26,7 @@ func New(
 func (s Service) Create(ctx context.Context, d *domain.Department) (err error) {
 	err = s.Repository.Create(ctx, d)
 	if err != nil {
+		err = errors.Wrap(err, "failed to create a department")
 		return
 	}
 
@@ -35,6 +38,7 @@ func (s Service) Fetch(ctx context.Context, filter domain.DepartmentFilter) (dep
 	departments, nextCursor, err = s.Repository.Fetch(ctx, filter)
 	if err != nil {
 		nextCursor = filter.Cursor
+		err = errors.Wrap(err, "failed to fetch departments")
 		return
 	}
 
@@ -45,6 +49,7 @@ func (s Service) Fetch(ctx context.Context, filter domain.DepartmentFilter) (dep
 func (s Service) Get(ctx context.Context, departmentID string) (department domain.Department, err error) {
 	department, err = s.Repository.Get(ctx, departmentID)
 	if err != nil {
+		err = errors.Wrap(err, "failed to get a department")
 		return
 	}
 
@@ -55,6 +60,7 @@ func (s Service) Get(ctx context.Context, departmentID string) (department domai
 func (s Service) Update(ctx context.Context, d domain.Department) (department domain.Department, err error) {
 	department, err = s.Repository.Update(ctx, d)
 	if err != nil {
+		err = errors.Wrap(err, "failed to update a department")
 		return
 	}
 	return
@@ -64,6 +70,7 @@ func (s Service) Update(ctx context.Context, d domain.Department) (department do
 func (s Service) Delete(ctx context.Context, departmentID string) (err error) {
 	err = s.Repository.Delete(context.Background(), departmentID)
 	if err != nil {
+		err = errors.Wrap(err, "failed to delete a department")
 		return
 	}
 
