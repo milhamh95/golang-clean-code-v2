@@ -49,7 +49,11 @@ func (s Service) Get(ctx context.Context, departmentID string) (department domai
 
 // Update is a service to update a department
 func (s Service) Update(ctx context.Context, d domain.Department) (department domain.Department, err error) {
-	return domain.Department{}, errors.New("not yet implemented")
+	department, err = s.Repository.Update(ctx, d)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // Delete is a service to delete a department

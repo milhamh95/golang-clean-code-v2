@@ -68,6 +68,59 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestFetch(t *testing.T) {
+	var department1, department2, department3 domain.Department
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department1)
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujssxh0cECutqzMgbtXSGnjorm", &department2)
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujsszgFvbiEr7CDgE3z8MAUPFt", &department3)
+
+	mockDepartmentRepo := new(mocks.DepartmentRepository)
+
+	tests := map[string]struct {
+		filter         domain.DepartmentFilter
+		departmentRepo map[string]testdata.FuncCall
+		expectedRes    []domain.Department
+		expectedErr    error
+	}{
+		"success with num": {
+			filter: domain.DepartmentFilter{Num: 2},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.DepartmentFilter{Num: 2}},
+					Output: []interface{}{[]domain.Department{department1, department2}},
+				},
+			},
+			expectedRes: []domain.Department{department1, department2},
+			expectedErr: nil,
+		},
+	}
+
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			for name, fn := range tc.departmentRepo {
+				if fn.Called {
+					mockDepartmentRepo.On(name, fn.Input...).Return(fn.Output...).Once()
+				}
+			}
+
+			departmentService := service.New(mockDepartmentRepo)
+			res, cursor, err := departmentService.Fetch(context.Background(), tc.filter)
+
+			mockDepartmentRepo.AssertExpectations(t)
+
+			if tc.expectedErr != nil {
+				require.EqualError(t, err, tc.expectedErr.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, res, tc.expectedRes)
+			require.Equal(t, "", cursor)
+		})
+	}
+}
+
 func TestGet(t *testing.T) {
 	var department domain.Department
 	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
