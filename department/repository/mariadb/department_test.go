@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/sync/errgroup"
@@ -107,9 +106,8 @@ func (d *departmentSuite) TestGet() {
 	})
 
 	d.T().Run("not found", func(t *testing.T) {
-		expectedErr := errors.New("data is not found")
 		_, err := departmentRepo.Get(context.Background(), "1")
-		require.EqualError(t, err, expectedErr.Error())
+		require.EqualError(t, err, domain.ErrNotFound.Error())
 	})
 }
 

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/friendsofgo/errors"
 	"github.com/segmentio/ksuid"
 	log "github.com/sirupsen/logrus"
 
@@ -198,7 +197,7 @@ func (r Repository) Get(ctx context.Context, departmentID string) (department do
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = errors.New("department is not found")
+			err = domain.ErrNotFound
 			return
 		}
 		return
