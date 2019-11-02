@@ -22,6 +22,11 @@ func New(departmentRepo domain.DepartmentRepository, employeeRepo domain.Employe
 
 // Create will create a new employee
 func (s Service) Create(ctx context.Context, e *domain.Employee) (err error) {
+	err = s.employeeRepo.Create(context.Background(), e)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
