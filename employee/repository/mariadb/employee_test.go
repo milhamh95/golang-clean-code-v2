@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/sync/errgroup"
@@ -139,7 +138,7 @@ func (e *employeeSuite) TestGet() {
 	})
 
 	e.T().Run("not found", func(t *testing.T) {
-		expectedErr := errors.New("employee is not found: 1")
+		expectedErr := domain.ErrNotFound
 		_, err := employeeRepo.Get(context.Background(), "1")
 		require.EqualError(t, err, expectedErr.Error())
 	})
@@ -282,6 +281,15 @@ func (e *employeeSuite) TestUpdate() {
 		require.NoError(t, err)
 		require.Equal(t, newEmployee.LastName, res.LastName)
 	})
+
+	e.T().Run("not found", func(t *testing.T) {
+		newEmployee := employee
+		employee.LastName = "Christa"
+
+		res, err := employeeRepo.Update(context.Background(), newEmployee)
+		require.Equal(t, domain.Department{}, res)
+		require.EqualError(t, err, domain.ErrNotFound.Error())
+	})
 }
 
 func (e *employeeSuite) TestDelete() {
@@ -296,5 +304,10 @@ func (e *employeeSuite) TestDelete() {
 	e.T().Run("success", func(t *testing.T) {
 		err := employeeRepo.Delete(context.Background(), employee.ID)
 		require.NoError(t, err)
+	})
+
+	e.T().Run("not found", func(t *testing.T) {
+		err := employeeRepo.Delete(context.Background(), "asdf")
+		require.EqualError(t, err, domain.ErrNotFound.Error())
 	})
 }

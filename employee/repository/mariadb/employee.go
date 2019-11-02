@@ -114,7 +114,7 @@ func (r Repository) Get(ctx context.Context, employeeID string) (employee domain
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			err = errors.Errorf("employee is not found: %s", employeeID)
+			err = domain.ErrNotFound
 			return
 		}
 		return
@@ -275,7 +275,7 @@ func (r Repository) Update(ctx context.Context, e domain.Employee) (employee dom
 
 	defer r.closeStatement(stmt)
 
-	_, err = stmt.ExecContext(ctx, args...)
+	res, err := stmt.ExecContext(ctx, args...)
 	if err != nil {
 		r.rollback(tx, "failed to update employee")
 		return
@@ -283,6 +283,17 @@ func (r Repository) Update(ctx context.Context, e domain.Employee) (employee dom
 
 	err = tx.Commit()
 	if err != nil {
+		r.rollback(tx, "failed to rollback after commit")
+		return
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return
+	}
+
+	if count == 0 {
+		err = domain.ErrNotFound
 		return
 	}
 
@@ -316,13 +327,27 @@ func (r Repository) Delete(ctx context.Context, employeeID string) (err error) {
 
 	defer r.closeStatement(stmt)
 
-	_, err = stmt.ExecContext(ctx, args...)
+	res, err := stmt.ExecContext(ctx, args...)
 	if err != nil {
 		r.rollback(tx, "failed to execute delete employee")
 		return
 	}
 
 	err = tx.Commit()
+	if err != nil {
+		r.rollback(tx, "failed to commit")
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return
+	}
+
+	if count == 0 {
+		err = domain.ErrNotFound
+		return
+	}
+
 	return
 }
 
