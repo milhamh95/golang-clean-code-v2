@@ -258,6 +258,58 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestUpdate(t *testing.T) {
+	var department domain.Department
+	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)
+
+	newDepartment := department
+	newDepartment.Name = "Human Resources"
+
+	mockDepartmentRepo := new(mocks.DepartmentRepository)
+
+	tests := map[string]struct {
+		departmentRepo map[string]testdata.FuncCall
+		expectedRes    domain.Department
+		expectedErr    error
+	}{
+		"success": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Update": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department},
+					Output: []interface{}{newDepartment, nil},
+				},
+			},
+			expectedRes: newDepartment,
+			expectedErr: nil,
+		},
+	}
+
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			for name, fn := range tc.departmentRepo {
+				if fn.Called {
+					mockDepartmentRepo.On(name, fn.Input...).Return(fn.Output...).Once()
+				}
+			}
+
+			departmentService := service.New(mockDepartmentRepo)
+			res, err := departmentService.Update(context.Background(), department)
+
+			mockDepartmentRepo.AssertExpectations(t)
+
+			if tc.expectedErr != nil {
+				require.Equal(t, errors.Cause(err), tc.expectedErr.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, newDepartment, res)
+		})
+	}
+
+}
+
 func TestDelete(t *testing.T) {
 	var department domain.Department
 	testdata.UnmarshallGoldenToJSON(t, "department-0ujsswThIGTUYm2K8FjOOfXtY1K", &department)

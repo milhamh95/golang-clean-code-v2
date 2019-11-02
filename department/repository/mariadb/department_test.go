@@ -243,6 +243,17 @@ func (d *departmentSuite) TestUpdate() {
 		require.NoError(t, err)
 		require.Equal(t, newDepartment.Description, res.Description)
 	})
+
+	d.T().Run("not found", func(t *testing.T) {
+		newDepartment := domain.Department{
+			ID:          "sdfgfsgsdf",
+			Name:        department.Name,
+			Description: "this is description",
+		}
+		res, err := departmentRepo.Update(context.Background(), newDepartment)
+		require.EqualError(t, err, domain.ErrNotFound.Error())
+		require.Equal(t, domain.Department{}, res)
+	})
 }
 
 func (d *departmentSuite) TestDelete() {

@@ -216,6 +216,7 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return
+
 	}
 
 	query, args, err := sq.Update("departments").
@@ -229,29 +230,43 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 	if err != nil {
 		r.rollback(tx)
 		return
+
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		r.rollback(tx)
 		return
+
 	}
 
 	defer func() {
-		err = stmt.Close()
+		err := stmt.Close()
 		if err != nil {
 			log.Error(err)
 		}
 	}()
 
-	_, err = stmt.ExecContext(ctx, args...)
+	res, err := stmt.ExecContext(ctx, args...)
 	if err != nil {
 		r.rollback(tx)
+		return
+
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
+		return
+
+	}
+
+	if count == 0 {
+		err = domain.ErrNotFound
 		return
 	}
 
@@ -259,6 +274,7 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 	if err != nil {
 		return
 	}
+
 	return
 }
 
