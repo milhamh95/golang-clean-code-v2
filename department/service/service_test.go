@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/friendsofgo/errors"
@@ -283,6 +284,28 @@ func TestUpdate(t *testing.T) {
 			expectedRes: newDepartment,
 			expectedErr: nil,
 		},
+		"with error from department repo": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Update": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department},
+					Output: []interface{}{domain.Department{}, errors.New("unexpected error")},
+				},
+			},
+			expectedRes: domain.Department{},
+			expectedErr: errors.New("failed to update a department: unexpected error"),
+		},
+		"with error not found": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Update": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department},
+					Output: []interface{}{domain.Department{}, domain.ErrNotFound},
+				},
+			},
+			expectedRes: domain.Department{},
+			expectedErr: fmt.Errorf("failed to update a department: %s", domain.ErrNotFound.Error()),
+		},
 	}
 
 	for tn, tc := range tests {
@@ -299,7 +322,7 @@ func TestUpdate(t *testing.T) {
 			mockDepartmentRepo.AssertExpectations(t)
 
 			if tc.expectedErr != nil {
-				require.Equal(t, errors.Cause(err), tc.expectedErr.Error())
+				require.EqualError(t, err, tc.expectedErr.Error())
 				return
 			}
 
@@ -307,7 +330,6 @@ func TestUpdate(t *testing.T) {
 			require.Equal(t, newDepartment, res)
 		})
 	}
-
 }
 
 func TestDelete(t *testing.T) {
@@ -339,6 +361,16 @@ func TestDelete(t *testing.T) {
 				},
 			},
 			expectedErr: errors.New("failed to delete a department: unexpected error"),
+		},
+		"with error department not found": {
+			departmentRepo: map[string]testdata.FuncCall{
+				"Delete": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), department.ID},
+					Output: []interface{}{domain.ErrNotFound},
+				},
+			},
+			expectedErr: fmt.Errorf("failed to delete a department: %s", domain.ErrNotFound.Error()),
 		},
 	}
 

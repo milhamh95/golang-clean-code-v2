@@ -63,7 +63,7 @@ func (r Repository) Create(ctx context.Context, d *domain.Department) (err error
 	}
 
 	defer func() {
-		err = stmt.Close()
+		err := stmt.Close()
 		if err != nil {
 			log.Error(err)
 		}
@@ -261,8 +261,8 @@ func (r Repository) Update(ctx context.Context, d domain.Department) (department
 
 	err = tx.Commit()
 	if err != nil {
+		r.rollback(tx)
 		return
-
 	}
 
 	if count == 0 {
@@ -300,19 +300,35 @@ func (r Repository) Delete(ctx context.Context, departmentID string) (err error)
 	}
 
 	defer func() {
-		err = stmt.Close()
+		err := stmt.Close()
 		if err != nil {
 			log.Error(err)
 		}
 	}()
 
-	_, err = stmt.ExecContext(ctx, args...)
+	res, err := stmt.ExecContext(ctx, args...)
+	if err != nil {
+		r.rollback(tx)
+		return
+	}
+
+	count, err := res.RowsAffected()
 	if err != nil {
 		r.rollback(tx)
 		return
 	}
 
 	err = tx.Commit()
+	if err != nil {
+		r.rollback(tx)
+		return
+	}
+
+	if count == 0 {
+		err = domain.ErrNotFound
+		return
+	}
+
 	return
 }
 
