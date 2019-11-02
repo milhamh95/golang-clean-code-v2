@@ -6,7 +6,11 @@
     "date_of_birth": "1995-02-13",
     "title": "Senior Developer",
     "department": {
-        "id": "0ujsswThIGTUYm2K8FjOOfXtY1K"
+        "id": "0ujsswThIGTUYm2K8FjOOfXtY1K",
+        "name":"Marketing",
+        "description":"Nondisp fx of lunate, right wrist, subs for fx w routn heal",
+        "created_time": "2019-10-13T15:04:05+07:00",
+        "updated_time": "2019-10-13T15:04:05+07:00"
     },
     "created_time": "2019-10-13T15:04:05+07:00",
     "updated_time": "2019-10-13T15:04:05+07:00"
