@@ -22,7 +22,7 @@ func New(departmentRepo domain.DepartmentRepository, employeeRepo domain.Employe
 
 // Create will create a new employee
 func (s Service) Create(ctx context.Context, e *domain.Employee) (err error) {
-	err = s.employeeRepo.Create(context.Background(), e)
+	err = s.employeeRepo.Create(ctx, e)
 	if err != nil {
 		return
 	}
@@ -42,12 +42,43 @@ func (s Service) Get(ctx context.Context, employeeID string) (employee domain.Em
 
 // Update will update an employee
 func (s Service) Update(ctx context.Context, e domain.Employee) (employee domain.Employee, err error) {
+	ch1 := make(chan func() (domain.Employee, error))
+	ch2 := make(chan func() (domain.Department, error))
+
+	go func(ch chan func() (domain.Employee, error), e domain.Employee) {
+		employee, err := s.employeeRepo.Update(ctx, e)
+
+		ch <- (func() (domain.Employee, error) {
+			return employee, err
+		})
+	}(ch1, e)
+
+	go func(ch chan func() (domain.Department, error), id string) {
+		department, err := s.departmentRepo.Get(ctx, id)
+
+		ch <- (func() (domain.Department, error) {
+			return department, err
+		})
+	}(ch2, e.Department.ID)
+
+	employee, err = (<-ch1)()
+	if err != nil {
+		return
+	}
+
+	department, err := (<-ch2)()
+	if err != nil {
+		return
+	}
+
+	employee.Department = department
+
 	return
 }
 
 // Delete will delete an employee
 func (s Service) Delete(ctx context.Context, employeeID string) (err error) {
-	err = s.employeeRepo.Delete(context.Background(), employeeID)
+	err = s.employeeRepo.Delete(ctx, employeeID)
 	if err != nil {
 		return
 	}
