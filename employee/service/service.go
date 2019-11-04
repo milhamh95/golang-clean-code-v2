@@ -37,6 +37,18 @@ func (s Service) Fetch(ctx context.Context, filter domain.EmployeeFilter) (emplo
 
 // Get will return an employee
 func (s Service) Get(ctx context.Context, employeeID string) (employee domain.Employee, err error) {
+	employee, err = s.employeeRepo.Get(ctx, employeeID)
+	if err != nil {
+		return
+	}
+
+	department, err := s.departmentRepo.Get(ctx, employee.Department.ID)
+	if err != nil {
+		return
+	}
+
+	employee.Department = department
+
 	return
 }
 
