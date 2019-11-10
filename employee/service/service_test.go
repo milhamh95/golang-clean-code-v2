@@ -112,6 +112,138 @@ func TestFetch(t *testing.T) {
 			expectedCursor: "cursor-1",
 			expectedErr:    nil,
 		},
+		"success with num and cursor": {
+			filter: domain.EmployeeFilter{Num: 1, Cursor: "cursor-1"},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{Num: 1, Cursor: "cursor-1"}},
+					Output: []interface{}{[]domain.Employee{employee2}, "cursor-2", nil},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{mock.Anything, mock.AnythingOfType("string")},
+					Output: []interface{}{mockDepartment, nil},
+				},
+			},
+			expectedRes:    []domain.Employee{employee2},
+			expectedCursor: "cursor-2",
+			expectedErr:    nil,
+		},
+		"success with num and cursor end of page": {
+			filter: domain.EmployeeFilter{Num: 1, Cursor: "cursor-2"},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{Num: 1, Cursor: "cursor-2"}},
+					Output: []interface{}{[]domain.Employee{}, "cursor-2", nil},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{Called: false},
+			},
+			expectedRes:    []domain.Employee{},
+			expectedCursor: "cursor-2",
+			expectedErr:    nil,
+		},
+		"success with ids": {
+			filter: domain.EmployeeFilter{IDs: []string{employee2.ID}},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{IDs: []string{employee2.ID}}},
+					Output: []interface{}{[]domain.Employee{employee2}, "", nil},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{mock.Anything, mock.AnythingOfType("string")},
+					Output: []interface{}{mockDepartment, nil},
+				},
+			},
+			expectedRes:    []domain.Employee{employee2},
+			expectedCursor: "",
+			expectedErr:    nil,
+		},
+		"success with keyword": {
+			filter: domain.EmployeeFilter{Keyword: "emilia"},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{Keyword: "emilia"}},
+					Output: []interface{}{[]domain.Employee{employee1}, "", nil},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{mock.Anything, mock.AnythingOfType("string")},
+					Output: []interface{}{mockDepartment, nil},
+				},
+			},
+			expectedRes:    []domain.Employee{employee1},
+			expectedCursor: "",
+			expectedErr:    nil,
+		},
+		"success with dept ids": {
+			filter: domain.EmployeeFilter{DeptIDs: []string{"1"}},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{DeptIDs: []string{"1"}}},
+					Output: []interface{}{[]domain.Employee{employee1}, "", nil},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{mock.Anything, mock.AnythingOfType("string")},
+					Output: []interface{}{mockDepartment, nil},
+				},
+			},
+			expectedRes:    []domain.Employee{employee1},
+			expectedCursor: "",
+			expectedErr:    nil,
+		},
+		"error fetch employee repo": {
+			filter: domain.EmployeeFilter{Num: 1},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{Num: 1}},
+					Output: []interface{}{[]domain.Employee{}, "", errors.New("unknown error")},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{Called: false},
+			},
+			expectedRes:    []domain.Employee{},
+			expectedCursor: "",
+			expectedErr:    errors.New("unknown error"),
+		},
+		"error get department": {
+			filter: domain.EmployeeFilter{Num: 1},
+			employeeRepo: map[string]testdata.FuncCall{
+				"Fetch": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), domain.EmployeeFilter{Num: 1}},
+					Output: []interface{}{[]domain.Employee{employee1}, "cursor-1", nil},
+				},
+			},
+			departmentRepo: map[string]testdata.FuncCall{
+				"Get": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{mock.Anything, mock.AnythingOfType("string")},
+					Output: []interface{}{domain.Department{}, errors.New("unknown error")},
+				},
+			},
+			expectedRes:    []domain.Employee{},
+			expectedCursor: "",
+			expectedErr:    errors.New("unknown error"),
+		},
 	}
 
 	for tn, tc := range tests {

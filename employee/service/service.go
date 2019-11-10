@@ -39,6 +39,10 @@ func (s Service) Fetch(ctx context.Context, filter domain.EmployeeFilter) (emplo
 		return
 	}
 
+	if len(employees) == 0 {
+		return
+	}
+
 	err = s.fetchDepartment(ctx, employees)
 	if err != nil {
 		return
