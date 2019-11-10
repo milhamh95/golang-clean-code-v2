@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 )
 
@@ -32,6 +34,60 @@ func (s Service) Create(ctx context.Context, e *domain.Employee) (err error) {
 
 // Fetch will return employess based on filter
 func (s Service) Fetch(ctx context.Context, filter domain.EmployeeFilter) (employees []domain.Employee, nextCursor string, err error) {
+	employees, nextCursor, err = s.employeeRepo.Fetch(ctx, filter)
+	if err != nil {
+		return
+	}
+
+	err = s.fetchDepartment(ctx, employees)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (s Service) fetchDepartment(ctx context.Context, e []domain.Employee) (err error) {
+	empDept := map[string]domain.Department{}
+	for _, v := range e {
+		empDept[v.ID] = domain.Department{}
+	}
+
+	g, ctx := errgroup.WithContext(context.Background())
+	c := make(chan domain.Department)
+	for k := range empDept {
+		k := k
+		g.Go(func() error {
+			dept, err := s.departmentRepo.Get(ctx, k)
+			if err != nil {
+				return err
+			}
+			c <- dept
+			return nil
+		})
+	}
+
+	go func() {
+		g.Wait()
+		close(c)
+	}()
+
+	for v := range c {
+		if v == (domain.Department{}) {
+			empDept[v.ID] = v
+		}
+	}
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	for i, v := range e {
+		if d, ok := empDept[v.Department.ID]; ok {
+			e[i].Department = d
+		}
+	}
+
 	return
 }
 
