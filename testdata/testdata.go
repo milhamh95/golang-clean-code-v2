@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/labstack/echo/v4"
 )
 
 // basepath is the root directory of this package
@@ -89,5 +91,9 @@ func MockServer(t *testing.T, reqs map[string]HTTPCall) (*httptest.Server, func(
 
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	return server, func() { server.Close() }
+}
 
+func GetEchoServer() *echo.Echo {
+	e := echo.New()
+	return e
 }
