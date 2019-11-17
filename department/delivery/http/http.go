@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
+	"github.com/milhamhidayat/golang-clean-code-v2/pkg/validator"
 )
 
 type departmentHandler struct {
@@ -28,6 +29,14 @@ func AddDepartmentHandler(e *echo.Echo, service domain.DepartmentService) {
 }
 
 func (h departmentHandler) Insert(c echo.Context) error {
+	var department domain.Department
+	if err := c.Bind(&department); err != nil {
+		return c.JSON(http.StatusBadRequest, "not ok")
+	}
+
+	if err := validator.Validate(department); err != nil {
+		return c.JSON(http.StatusBadRequest, "not ok")
+	}
 	return c.JSON(http.StatusCreated, "ok")
 }
 

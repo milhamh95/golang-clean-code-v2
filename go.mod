@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/Masterminds/squirrel v1.1.0
 	github.com/friendsofgo/errors v0.9.1
+	github.com/go-playground/validator/v10 v10.0.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/google/uuid v1.1.1

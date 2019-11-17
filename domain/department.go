@@ -16,7 +16,7 @@ type DepartmentFilter struct {
 // Department represent department data
 type Department struct {
 	ID          string    `json:"id"`
-	Name        string    `json:"name"`
+	Name        string    `json:"name" validate:"required"`
 	Description string    `json:"description"`
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
