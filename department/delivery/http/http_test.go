@@ -3,12 +3,12 @@ package http_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/friendsofgo/errors"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 
@@ -62,10 +62,28 @@ func TestInsert(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 		},
+		"error insert department from department service": {
+			reqBody: rawMockDepartment,
+			departmentService: map[string]testdata.FuncCall{
+				"Create": testdata.FuncCall{
+					Called: true,
+					Input:  []interface{}{context.Background(), &mockDepartment},
+					Output: []interface{}{errors.New("unexpected error")},
+				},
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+
+			for n, fn := range tc.departmentService {
+				if fn.Called {
+					mockDepartmentService.On(n, fn.Input...).Return(fn.Output...).Once()
+				}
+			}
+
 			req := httptest.NewRequest(http.MethodPost, "/departments", strings.NewReader(string(tc.reqBody)))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
@@ -74,13 +92,9 @@ func TestInsert(t *testing.T) {
 
 			e.ServeHTTP(rec, req)
 
-			var data interface{}
-			err := json.Unmarshal(rec.Body.Bytes(), &data)
-			require.NoError(t, err)
-
-			fmt.Println("========  ========")
-			fmt.Printf("%+v\n", data)
-			fmt.Println("=================")
+			// var data interface{}
+			// err := json.Unmarshal(rec.Body.Bytes(), &data)
+			// require.NoError(t, err)
 
 			require.Equal(t, tc.expectedStatus, rec.Code)
 		})

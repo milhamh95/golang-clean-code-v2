@@ -29,6 +29,8 @@ func AddDepartmentHandler(e *echo.Echo, service domain.DepartmentService) {
 }
 
 func (h departmentHandler) Insert(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	var department domain.Department
 	if err := c.Bind(&department); err != nil {
 		return c.JSON(http.StatusBadRequest, "not ok")
@@ -37,6 +39,12 @@ func (h departmentHandler) Insert(c echo.Context) error {
 	if err := validator.Validate(department); err != nil {
 		return c.JSON(http.StatusBadRequest, "not ok")
 	}
+
+	err := h.service.Create(ctx, &department)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
 	return c.JSON(http.StatusCreated, "ok")
 }
 
