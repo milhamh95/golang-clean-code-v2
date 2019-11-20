@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/friendsofgo/errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -49,7 +50,15 @@ func (h departmentHandler) Insert(c echo.Context) error {
 }
 
 func (h departmentHandler) Get(c echo.Context) error {
-	return c.JSON(http.StatusOK, "ok")
+	ctx := c.Request().Context()
+	departmentID := c.Param("id")
+
+	department, err := h.service.Get(ctx, departmentID)
+	if err != nil {
+		return errors.New("error again")
+	}
+
+	return c.JSON(http.StatusOK, department)
 }
 
 func (h departmentHandler) Fetch(c echo.Context) error {
