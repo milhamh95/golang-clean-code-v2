@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/friendsofgo/errors"
 	"github.com/labstack/echo/v4"
+
+	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 )
 
 // ErrorMiddleware returns an error with response http status code
@@ -13,14 +16,18 @@ func ErrorMiddleware() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			err := next(c)
 			if err == nil {
-				return echo.NewHTTPError(http.StatusOK, "ok")
+				return nil
 			}
 
 			fmt.Println("========  ========")
 			fmt.Printf("%+v\n", err)
 			fmt.Println("=================")
 
-			return echo.NewHTTPError(http.StatusUnauthorized, err)
+			if errors.Is(err, domain.ErrNotFound) {
+				return echo.NewHTTPError(http.StatusNotFound, domain.ErrNotFound)
+			}
+
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
 }

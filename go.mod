@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/Masterminds/squirrel v1.1.0
-	github.com/friendsofgo/errors v0.9.1
+	github.com/friendsofgo/errors v0.9.2
 	github.com/go-playground/validator/v10 v10.0.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang-migrate/migrate v3.5.4+incompatible
@@ -18,5 +18,6 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
+	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	google.golang.org/appengine v1.6.2 // indirect
 )

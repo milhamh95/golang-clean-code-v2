@@ -43,7 +43,7 @@ func (h departmentHandler) Insert(c echo.Context) error {
 
 	err := h.service.Create(ctx, &department)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return errors.Wrap(err, "failed to insert a department")
 	}
 
 	return c.JSON(http.StatusCreated, department)
@@ -55,7 +55,7 @@ func (h departmentHandler) Get(c echo.Context) error {
 
 	department, err := h.service.Get(ctx, departmentID)
 	if err != nil {
-		return errors.New("error again")
+		return errors.Wrap(err, "failed get a department")
 	}
 
 	return c.JSON(http.StatusOK, department)
