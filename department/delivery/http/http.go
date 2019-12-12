@@ -70,5 +70,12 @@ func (h departmentHandler) Update(c echo.Context) error {
 }
 
 func (h departmentHandler) Delete(c echo.Context) error {
-	return c.JSON(http.StatusNoContent, "ok")
+	ctx := c.Request().Context()
+	departmentID := c.Param("id")
+
+	err := h.service.Delete(ctx, departmentID)
+	if err != nil {
+		return errors.Wrap(err, "failed delete a department")
+	}
+	return c.NoContent(http.StatusNoContent)
 }

@@ -207,21 +207,41 @@ func TestGet(t *testing.T) {
 // 	})
 // }
 
-// func TestDelete(t *testing.T) {
-// 	e := testdata.GetEchoServer()
+func TestDelete(t *testing.T) {
+	e := testdata.GetEchoServer()
 
-// 	t.Run("success", func(t *testing.T) {
-// 		mockDepartmentService := new(mocks.DepartmentService)
-// 		req := httptest.NewRequest(http.MethodDelete, "/departments/123", nil)
-// 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	t.Run("success", func(t *testing.T) {
+		mockDepartmentService := new(mocks.DepartmentService)
+		mockDepartmentService.On("Delete", context.Background(), "123").Return(nil).Once()
 
-// 		rec := httptest.NewRecorder()
-// 		handler.AddDepartmentHandler(e, mockDepartmentService)
+		req := httptest.NewRequest(http.MethodDelete, "/departments/123", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
-// 		e.ServeHTTP(rec, req)
+		rec := httptest.NewRecorder()
+		handler.AddDepartmentHandler(e, mockDepartmentService)
 
-// 		res := rec.Result()
+		e.ServeHTTP(rec, req)
 
-// 		require.Equal(t, http.StatusNoContent, res.StatusCode)
-// 	})
-// }
+		res := rec.Result()
+
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+	})
+
+	t.Run("error delete a department", func(t *testing.T) {
+		mockDepartmentService := new(mocks.DepartmentService)
+		mockDepartmentService.On("Delete", context.Background(), "123").
+			Return(errors.New("unknown error")).Once()
+
+		req := httptest.NewRequest(http.MethodDelete, "/departments/123", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+		handler.AddDepartmentHandler(e, mockDepartmentService)
+
+		e.ServeHTTP(rec, req)
+
+		res := rec.Result()
+
+		require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	})
+}
