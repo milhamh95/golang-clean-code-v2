@@ -47,7 +47,7 @@ paths:
         "304":
           $ref: "#/components/responses/NotModified"
         "400":
-          $ref: "#components/responses/BadRequest"
+          $ref: "#/components/responses/BadRequest"
     post:
       tags:
         - Employee
@@ -148,7 +148,7 @@ paths:
         "304":
           $ref: "#/components/responses/NotModified"
         "400":
-          $ref: "#components/responses/BadRequest"
+          $ref: "#/components/responses/BadRequest"
     post:
       tags:
         - Department

@@ -1,12 +1,17 @@
 package http
 
 import (
-	"github.com/friendsofgo/errors"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/friendsofgo/errors"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
+	"github.com/milhamhidayat/golang-clean-code-v2/pkg/md5"
 	"github.com/milhamhidayat/golang-clean-code-v2/pkg/validator"
 )
 
@@ -62,11 +67,70 @@ func (h departmentHandler) Get(c echo.Context) error {
 }
 
 func (h departmentHandler) Fetch(c echo.Context) error {
-	return c.JSON(http.StatusOK, "ok")
+	ctx := c.Request().Context()
+
+	keyword := c.QueryParam("keyword")
+	cursor := c.QueryParam("cursor")
+
+	ids := make([]string, 0)
+	paramIDs := c.QueryParam("ids")
+	if paramIDs != "" {
+		ids = strings.Split(paramIDs, ",")
+	}
+
+	num := 20
+	if numStr := c.QueryParam("num"); numStr != "" {
+		var err error
+		if num, err = strconv.Atoi(numStr); err != nil {
+			err = fmt.Errorf("num query-param is not valid. Got error when parsing value: %v", err)
+			return domain.ConstraintErrorf("%s", err)
+		}
+	}
+
+	res, nextCursor, err := h.service.Fetch(ctx, domain.DepartmentFilter{IDs: ids, Keyword: keyword, Num: num, Cursor: cursor})
+	if err != nil {
+		return errors.Wrap(err, "error fetch departments")
+	}
+
+	if len(res) > 0 {
+		eTag := ""
+		if eTag, err = md5.Generate(res[0].ID); err != nil {
+			return errors.Wrap(err, "error generate departments eTag")
+		}
+
+		ifNoneMatch := c.Request().Header.Get("If-None-Match")
+		if eTag != "" && ifNoneMatch != "" && strings.Contains(ifNoneMatch, eTag) {
+			return c.NoContent(http.StatusNotModified)
+		}
+
+		c.Response().Header().Set("ETag", "W/"+eTag)
+		c.Response().Header().Set("X-Cursor", nextCursor)
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h departmentHandler) Update(c echo.Context) error {
-	return c.JSON(http.StatusOK, "ok")
+	ctx := c.Request().Context()
+	departmentID := c.Param("id")
+
+	var department domain.Department
+	if err := c.Bind(&department); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	if err := validator.Validate(department); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	department.ID = departmentID
+
+	res, err := h.service.Update(ctx, department)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete a department")
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h departmentHandler) Delete(c echo.Context) error {

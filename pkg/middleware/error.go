@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 
 	"github.com/friendsofgo/errors"
@@ -9,6 +9,10 @@ import (
 
 	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 )
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
 
 // ErrorMiddleware returns an error with response http status code
 func ErrorMiddleware() echo.MiddlewareFunc {
@@ -19,12 +23,19 @@ func ErrorMiddleware() echo.MiddlewareFunc {
 				return nil
 			}
 
-			fmt.Println("========  ========")
-			fmt.Printf("%+v\n", err)
-			fmt.Println("=================")
+			err = errors.Cause(err)
 
-			if errors.Is(err, domain.ErrNotFound) {
-				return echo.NewHTTPError(http.StatusNotFound, domain.ErrNotFound)
+			if _, ok := err.(domain.ConstraintError); ok {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			}
+
+			switch err {
+			case context.DeadlineExceeded, context.Canceled:
+				return echo.NewHTTPError(http.StatusRequestTimeout, err.Error())
+			case domain.ErrNotFound:
+				return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			case domain.ErrNotModified:
+				return c.NoContent(http.StatusNotModified)
 			}
 
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
