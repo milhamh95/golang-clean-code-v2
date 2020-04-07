@@ -76,14 +76,13 @@ func (s Service) fetchDepartment(ctx context.Context, e []domain.Employee) (err 
 		close(c)
 	}()
 
+	if err := g.Wait(); err != nil {
+		return err
+	}
 	for v := range c {
 		if v == (domain.Department{}) {
 			empDept[v.ID] = v
 		}
-	}
-
-	if err := g.Wait(); err != nil {
-		return err
 	}
 
 	for i, v := range e {

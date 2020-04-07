@@ -109,6 +109,11 @@ unittest: vendor
 test: vendor
 	GO111MODULE=on go test -p 1 $(TEST_OPTS) ./...
 
+# Build
+.PHONY: employee
+employee:
+	GO111MODULE=on go build -o employee github.com/golang-clean-code-v2/cmd/app
+
 # Mockery
 DepartmentService:
 	@mockery -dir=domain -name=DepartmentService -output=domain/mocks
