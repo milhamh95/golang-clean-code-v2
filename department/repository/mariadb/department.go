@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/segmentio/ksuid"
@@ -148,16 +149,25 @@ func (r Repository) Fetch(ctx context.Context, filter domain.DepartmentFilter) (
 	for rows.Next() {
 		d := domain.Department{}
 
+		createdTime := time.Time{}
+		updatedTime := time.Time{}
+
 		err = rows.Scan(
 			&d.ID,
 			&d.Name,
 			&d.Description,
-			&d.CreatedTime,
-			&d.UpdatedTime,
+			&createdTime,
+			&updatedTime,
 		)
 		if err != nil {
 			return
 		}
+
+		newcreated := createdTime.In(time.UTC).Format(time.RFC3339)
+		newupdated, _ := ntime.ConvertTimeToDifferentTimezone(updatedTime, time.Now().UTC().Location())
+		time1, _ := time.Parse(time.RFC3339, newcreated)
+		d.CreatedTime = time1
+		d.UpdatedTime = newupdated
 		departments = append(departments, d)
 	}
 

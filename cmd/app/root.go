@@ -6,13 +6,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hashicorp/hcl/hcl/strconv"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	deptRepo "github.com/milhamhidayat/golang-clean-code-v2/department/repository/mariadb"
 	deptService "github.com/milhamhidayat/golang-clean-code-v2/department/service"
+	"github.com/milhamhidayat/golang-clean-code-v2/domain"
 	"github.com/milhamhidayat/golang-clean-code-v2/pkg/env"
+)
+
+var (
+	departmentRepository domain.DepartmentRepository
+	departmentService    domain.DepartmentService
 )
 
 var rootCmd = &cobra.Command{
@@ -59,7 +64,7 @@ func initApp() {
 	}
 	db.SetMaxOpenConns(mysqlMaxOpenCon)
 
-	mysqlMaxConnLifetime, err := strconv.Atoi(env.Get("MYSQL_CONNECTION_LIFETIME"))
+	mysqlMaxConnLifetime, err := strconv.Atoi(env.Get("MYSQL_CONNECTION_LIFETIME_M"))
 	if err != nil {
 		log.Fatal("MYSQL_CONNECTION_LIFETIME_M is not well-set")
 	}
@@ -68,15 +73,15 @@ func initApp() {
 	/**
 	 * Context Timeout
 	 */
-	t, err := strconv.ParseInt(env.Get("CONTEXT_TIMEOUT_MS"), 10, 16)
-	if err != nil {
-		log.Fatal("CONTEXT_TIMEOUT_MS is not well-set")
-	}
-	contextTimeout := time.Duration(t) * time.Millisecond
+	// t, err := strconv.ParseInt(env.Get("CONTEXT_TIMEOUT_MS"), 10, 16)
+	// if err != nil {
+	// 	log.Fatal("CONTEXT_TIMEOUT_MS is not well-set")
+	// }
+	// contextTimeout := time.Duration(t) * time.Millisecond
 
 	/**
 	 * Department
 	 */
-	departmentRepository := deptRepo.New(db)
-	departmentService := deptService.New(departmentRepository)
+	departmentRepository = deptRepo.New(db)
+	departmentService = deptService.New(departmentRepository)
 }

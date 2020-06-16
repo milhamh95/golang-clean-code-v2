@@ -1,5 +1,6 @@
 IMAGE_NAME := employee
 TEST_OPTS := -covermode=atomic $(TEST_OPTS)
+SOURCES := $(shell find . -name '*.go' -type f -not -path './vendor/*'  -not -path '*/mocks/*')
 
 # Database
 MYSQL_USER ?= employee
@@ -110,9 +111,8 @@ test: vendor
 	GO111MODULE=on go test -p 1 $(TEST_OPTS) ./...
 
 # Build
-.PHONY: employee
-employee:
-	GO111MODULE=on go build -o employee github.com/golang-clean-code-v2/cmd/app
+employee: vendor $(SOURCES)
+	GO111MODULE=on go build -o office github.com/milhamhidayat/golang-clean-code-v2/cmd/app
 
 # Mockery
 DepartmentService:

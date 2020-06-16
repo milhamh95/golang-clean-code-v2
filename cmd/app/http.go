@@ -7,8 +7,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	departmentHandler "github.com/milhamhidayat/golang-clean-code-v2/department/delivery/http"
 	"github.com/milhamhidayat/golang-clean-code-v2/pkg/middleware"
-departmentHandler"github.com/milhamhidayat/golang-clean-code-v2/department/delivery/http"
 )
 
 const address = ":8500"
@@ -24,12 +24,13 @@ var serverCmd = &cobra.Command{
 			return c.JSON(http.StatusOK, "pong")
 		})
 
-		departmentHandler.AddDepartmentHandler(e, service domain.DepartmentService)
+		departmentHandler.AddDepartmentHandler(e, departmentService)
 
 		errCh := make(chan error)
 
 		go func(ch chan error) {
-			log.Info().Msgf("Starting HTTP server at", address)
+			log.Info().Msgf("Starting HTTP server at: %s", address)
+			errCh <- e.Start(address)
 		}(errCh)
 
 		go func(ch chan error) {
