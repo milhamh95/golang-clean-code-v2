@@ -163,11 +163,9 @@ func (r Repository) Fetch(ctx context.Context, filter domain.DepartmentFilter) (
 			return
 		}
 
-		newcreated := createdTime.In(time.UTC).Format(time.RFC3339)
-		newupdated, _ := ntime.ConvertTimeToDifferentTimezone(updatedTime, time.Now().UTC().Location())
-		time1, _ := time.Parse(time.RFC3339, newcreated)
-		d.CreatedTime = time1
-		d.UpdatedTime = newupdated
+		loc, _ := time.LoadLocation("Asia/Jakarta")
+		d.CreatedTime = createdTime.In(loc)
+		d.UpdatedTime = updatedTime.In(loc)
 		departments = append(departments, d)
 	}
 
@@ -196,14 +194,22 @@ func (r Repository) Get(ctx context.Context, departmentID string) (department do
 		return
 	}
 
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+
+	createdTime := time.Time{}
+	updatedTime := time.Time{}
+
 	row := r.DB.QueryRowContext(ctx, query, args...)
 	err = row.Scan(
 		&department.ID,
 		&department.Name,
 		&department.Description,
-		&department.CreatedTime,
-		&department.UpdatedTime,
+		&createdTime,
+		&updatedTime,
 	)
+
+	department.CreatedTime = createdTime.In(loc)
+	department.UpdatedTime = updatedTime.In(loc)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -16,6 +16,6 @@ vendor/
 
 # Ignore build binary file
 .golang-clean-code-v2
-.employee
+.office
 
 .env
