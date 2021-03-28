@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -64,6 +65,48 @@ func TestCreate(t *testing.T) {
 				return
 			}
 
+			require.NoError(t, err)
+		})
+	}
+}
+
+type CreateTestFile []CreateTestCase
+type CreateTestCase struct {
+	TestName      string            `json:"testName"`
+	Department    domain.Department `json:"department"`
+	ExpectedError error             `json:"expectedError"`
+}
+
+func TestCreateJSON(t *testing.T) {
+	createTestFileBytes := testdata.GetJSON(t, "department_service_create")
+
+	createTestFile := CreateTestFile{}
+	err := json.Unmarshal(createTestFileBytes, &createTestFile)
+	require.NoError(t, err)
+
+	for _, tc := range createTestFile {
+		t.Run(tc.TestName, func(t *testing.T) {
+			mockDepartmentRepo := new(mocks.DepartmentRepository)
+
+			input := []interface{}{
+				context.Background(),
+				&tc.Department,
+			}
+			output := []interface{}{
+				tc.ExpectedError,
+			}
+
+			mockDepartmentRepo.On("Create", input...).Return(output...).Once()
+
+			departmentService := service.New(mockDepartmentRepo)
+			err := departmentService.Create(context.Background(), &tc.Department)
+
+			mockDepartmentRepo.AssertExpectations(t)
+
+			if tc.ExpectedError != nil {
+				require.EqualError(t, err, tc.ExpectedError.Error())
+				return
+			}
 			require.NoError(t, err)
 		})
 	}

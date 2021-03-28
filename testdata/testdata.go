@@ -67,6 +67,17 @@ type FuncCall struct {
 	Output []interface{}
 }
 
+func GetJSON(t *testing.T, filename string) []byte {
+	t.Helper()
+
+	b, err := ioutil.ReadFile(Path(filename + ".json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return b
+}
+
 // MockServer is a mock server for HTTP Call testing
 func MockServer(t *testing.T, reqs map[string]HTTPCall) (*httptest.Server, func()) {
 	t.Helper()
